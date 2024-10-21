@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "verbatimModuleSyntax": true,
+    "baseUrl": "./",
+    "allowJs": true,
+    "isolatedModules": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "target": "esnext",
+    "noEmit": true,
+    "types": ["node", "vite/client"],
+    "paths": {
+      "@/*": ["./src/*"],
+      "@Richeskeno/*": ["./src/views/Richeskeno/*"],
+      "@MoneyComing/*": ["./src/views/MoneyComing/*"]
+    }
+  },
+  "include": ["./src/**/*.ts", "./src/**/*.d.ts", "./src/**/*.vue"]
+}

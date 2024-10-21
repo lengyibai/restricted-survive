@@ -1,0 +1,7 @@
+dev-dist
+dist
+node_modules
+package-lock.json
+visualizer.html
+.idea
+.env
