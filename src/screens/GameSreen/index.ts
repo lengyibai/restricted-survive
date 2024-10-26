@@ -4,7 +4,7 @@ import { PlayerPositionUI } from "./ui/PlayerPositionUI";
 import { JoystickUI } from "./ui/JoystickUI";
 import { MapUI } from "./ui/MapUI";
 import { FindWayMapUI } from "./ui/FindWayMapUI";
-import { entityMap, EntityMapUI } from "./ui/EntityMapUI";
+import { EntityMapUI } from "./ui/EntityMapUI";
 import { PlayerUI } from "./ui/PlayerUI";
 
 import { LibContainerSize } from "@/ui/other/LibContainerSize";
@@ -15,8 +15,6 @@ import { mapStore } from "@/store/map";
 
 /** @description 游戏世界 */
 export class GameSreen extends LibContainerSize {
-  /** 当前速度，米/秒，默认为4 */
-  static readonly SPPEND = 4;
   /** 地图 */
   private gameMap: MapUI;
   /** 寻路地图 */
@@ -45,8 +43,8 @@ export class GameSreen extends LibContainerSize {
     //地皮
     this.gameMap = new MapUI();
     this.addChild(this.gameMap);
-    this.gameMap.x = -MapUI.MAP_SIZE.width / 2 + window.innerWidth / 2;
-    this.gameMap.y = -MapUI.MAP_SIZE.height / 2 + window.innerHeight / 2;
+    // this.gameMap.x = -MapUI.MAP_SIZE.width / 2 + window.innerWidth / 2;
+    // this.gameMap.y = -MapUI.MAP_SIZE.height / 2 + window.innerHeight / 2;
 
     //草地
     const grass = new TilingSprite(
@@ -59,19 +57,19 @@ export class GameSreen extends LibContainerSize {
     grass.tileScale.y = 0.5;
     grass.alpha = 0.5;
 
-    //实体地图
-    this.entityMap = new EntityMapUI();
-    this.gameMap.addChild(entityMap);
-
     //寻路地图
     this.findWayMap = new FindWayMapUI();
     this.gameMap.addChild(this.findWayMap);
 
+    //实体地图
+    this.entityMap = new EntityMapUI();
+    this.gameMap.addChild(this.entityMap);
+
     //玩家
     this.player = new PlayerUI();
     this.gameMap.addChild(this.player);
-    this.player.x = (MapUI.MAP_SIZE.width - this.player.width) / 2;
-    this.player.y = (MapUI.MAP_SIZE.height - this.player.height) / 2;
+    // this.player.x = (MapUI.MAP_SIZE.width - this.player.width) / 2;
+    // this.player.y = (MapUI.MAP_SIZE.height - this.player.height) / 2;
     this.findWayMap.setTargetPoint(MapUI.MAP_SIZE.width / 2, MapUI.MAP_SIZE.height / 2);
 
     //坐标信息
@@ -149,6 +147,30 @@ export class GameSreen extends LibContainerSize {
 
   /** @description 设置玩家移动相关事件 */
   private setEvent() {
+    //地图事件
+    _setEvent(this.gameMap, "pointertap", (e) => {
+      const { x: pageX, y: pageY } = e.page;
+
+      //屏幕坐标转地图坐标，给玩家设置
+      const posX = Math.abs(this.gameMap.x) + pageX;
+      const posY = Math.abs(this.gameMap.y) + pageY;
+
+      //地图坐标转坐标系坐标
+      const { x: coordX, y: coordY } = MapUI.posToCoord(posX, posY);
+
+      //鼠标左键放置障碍物
+      if (e.button === 0) {
+        const targetGridCoord = FindWayMapUI.getGridCoordinates(posX, posY);
+        this.createObstacle(targetGridCoord.x, targetGridCoord.y);
+      }
+
+      //鼠标右键寻路
+      if (e.button === 2) {
+        this.findWayMap.startFindWay(pageX, pageY);
+        mapStore.setCoord(coordX, coordY);
+      }
+    });
+
     //键盘事件按键状态监听
     const keyMovePlayerAndMap = () => {
       const px = PlayerUI.getPlayerMovePixel();
@@ -186,28 +208,6 @@ export class GameSreen extends LibContainerSize {
       this.findWayMap.killPathfindingMove();
     });
 
-    //地图事件
-    _setEvent(this.gameMap, "pointertap", (e) => {
-      const { x: pageX, y: pageY } = e.page;
-
-      //屏幕坐标转地图坐标，给玩家设置
-      const posX = Math.abs(this.x) + pageX;
-      const posY = Math.abs(this.y) + pageY;
-
-      //地图坐标转坐标系坐标
-      const { x: coordX, y: coordY } = MapUI.posToCoord(posX, posY);
-      mapStore.setCoord(coordX, coordY);
-
-      // if (e.button === 0) {
-      //   const targetGridCoord = FindWayMapUI.getGridCoordinates(posX, posY);
-      //   this.createObstacle(targetGridCoord);
-      // }
-
-      if (e.button === 2) {
-        this.findWayMap.startFindWay(pageX, pageY);
-      }
-    });
-
     //寻路地图事件
     this.findWayMap.setEvent("move", (x, y) => {
       this.player.x += x;
@@ -226,18 +226,18 @@ export class GameSreen extends LibContainerSize {
   }
 
   /** @description 创建障碍物图形 */
-  private createObstacle(position: { x: number; y: number }) {
+  private createObstacle(x: number, y: number) {
     const obstacle = new Graphics();
     obstacle.beginFill("blue");
     obstacle.drawRect(0, 0, FindWayMapUI.CELL_SIZE, FindWayMapUI.CELL_SIZE);
     obstacle.endFill();
 
     //设置障碍物位置
-    obstacle.x = position.x * FindWayMapUI.CELL_SIZE;
-    obstacle.y = position.y * FindWayMapUI.CELL_SIZE;
+    obstacle.x = x * FindWayMapUI.CELL_SIZE;
+    obstacle.y = y * FindWayMapUI.CELL_SIZE;
 
     //将这些位置标记为不可行走
-    this.findWayMap.grid.setWalkableAt(position.x, position.y, false);
+    this.findWayMap.grid.setWalkableAt(x, y, false);
 
     //将障碍物添加到实体地图中
     this.entityMap.addObstacle(obstacle);

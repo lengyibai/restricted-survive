@@ -60,12 +60,20 @@ export class FindWayMapUI extends LibContainerSize {
 
   /** @description 开始寻路 */
   startFindWay(pageX: number, pageY: number) {
-    //屏幕坐标转地图坐标，给玩家设置
-    const x = Math.abs(mapStore.x) + pageX;
-    const y = Math.abs(mapStore.y) + pageY;
+    //屏幕坐标转地图坐标
+    let x = Math.abs(mapStore.x) + pageX;
+    let y = Math.abs(mapStore.y) + pageY;
 
     const playerGridCoord = FindWayMapUI.getGridCoordinates(playerStore.x, playerStore.y);
     const targetGridCoord = FindWayMapUI.getGridCoordinates(x, y);
+
+    //检查目标点周围的格子是否有障碍物，如果有障碍物，将目标点调整为其中心点
+    if (this.hasObstacleAround(targetGridCoord.x, targetGridCoord.y)) {
+      const centerX = (targetGridCoord.x + 0.5) * FindWayMapUI.CELL_SIZE;
+      const centerY = (targetGridCoord.y + 0.5) * FindWayMapUI.CELL_SIZE;
+      x = centerX;
+      y = centerY;
+    }
 
     //计算从玩家到目标的路径
     this.path = this.calculatePath(playerGridCoord, targetGridCoord);
@@ -179,12 +187,14 @@ export class FindWayMapUI extends LibContainerSize {
     this.killPathfindingMove(false);
     this.targetPoint.visible = true;
 
+    //忽略第一个路径点，因为玩家坐标已经在第一个路径点处
     let pathIndex = 1;
+
     const pixel = PlayerUI.getPlayerMovePixel();
 
     this.pathfindingMove = () => {
       if (pathIndex < this.path.length) {
-        // 获取下一个路径点目标点
+        //获取下一个路径点目标点
         const nextPoint = this.path[pathIndex];
         let targetX = nextPoint[0] * FindWayMapUI.CELL_SIZE;
         let targetY = nextPoint[1] * FindWayMapUI.CELL_SIZE;
@@ -195,12 +205,12 @@ export class FindWayMapUI extends LibContainerSize {
           targetY = y - PlayerUI.SIZE.height / 2;
         }
 
-        // 计算当前路径点与玩家的直线距离
+        //计算当前路径点与玩家的直线距离
         const dx = targetX - playerStore.x;
         const dy = targetY - playerStore.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        // 到达路径点后，移动到下一个路径点
+        //到达路径点后，移动到下一个路径点
         if (distance < 1) {
           pathIndex++;
         } else {
@@ -213,7 +223,7 @@ export class FindWayMapUI extends LibContainerSize {
       }
     };
 
-    // 当路径寻路完成后，将精灵的位置更新为目标位置，避免下一次寻路时先到达中间
+    //当路径寻路完成后，将精灵的位置更新为目标位置，避免下一次寻路时先到达中间
     Ticker.shared.add(this.pathfindingMove);
   }
 
@@ -223,5 +233,34 @@ export class FindWayMapUI extends LibContainerSize {
     if (eventName === "move") {
       this.playerMove = callback;
     }
+  }
+
+  /**
+   * @description 检查目标点周围是否有障碍物
+   * @param targetCoord - 目标单元格行列
+   */
+  private hasObstacleAround(x: number, y: number) {
+    const directions = [
+      { x: 0, y: 1 }, //下
+      { x: 0, y: -1 }, //上
+      { x: 1, y: 0 }, //右
+      { x: -1, y: 0 }, //左
+      { x: -1, y: -1 }, //左上
+      { x: -1, y: 1 }, //左下
+      { x: 1, y: -1 }, //右上
+      { x: 1, y: 1 }, //右下
+    ];
+
+    for (const dir of directions) {
+      const neighborX = x + dir.x;
+      const neighborY = y + dir.y;
+
+      //确保邻近格子在有效范围内
+      if (!this.grid.isWalkableAt(neighborX, neighborY)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

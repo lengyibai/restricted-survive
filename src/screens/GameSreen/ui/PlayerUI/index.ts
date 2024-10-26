@@ -1,11 +1,11 @@
 import { Assets } from "pixi.js";
 
-import { GameSreen } from "../..";
-
 import { LibImgSprite } from "@/ui/other/LibImgSprite";
 
 /** @description 玩家 */
 export class PlayerUI extends LibImgSprite {
+  /** 当前速度，米/秒，默认为4 */
+  static readonly SPPEND = 10;
   /** 玩家大小 */
   static readonly SIZE = {
     width: 50,
@@ -33,6 +33,6 @@ export class PlayerUI extends LibImgSprite {
 
   /** @description 获取玩家每1毫秒移动的像素 */
   static getPlayerMovePixel() {
-    return (GameSreen.SPPEND / 10) * 2;
+    return (PlayerUI.SPPEND / 10) * 2;
   }
 }

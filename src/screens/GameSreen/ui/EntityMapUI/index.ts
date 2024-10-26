@@ -1,14 +1,17 @@
-import { Container, Graphics } from "pixi.js";
+import { Graphics } from "pixi.js";
+
+import { MapUI } from "../MapUI";
 
 import type { LibImgSprite } from "@/ui/other/LibImgSprite";
+import { LibContainerSize } from "@/ui/other/LibContainerSize";
 
 /** @description 实体地图，用于放置物体的地图 */
-export class EntityMapUI extends Container {
+export class EntityMapUI extends LibContainerSize {
   /** 障碍物 */
   obstacles: Graphics[] = [];
 
   constructor() {
-    super();
+    super(MapUI.MAP_SIZE.width, MapUI.MAP_SIZE.height);
   }
 
   /** @description 碰撞检测：AABB */
@@ -60,7 +63,3 @@ export class EntityMapUI extends Container {
     this.addChild(obstacle);
   }
 }
-
-const entityMap = new EntityMapUI();
-
-export { entityMap };
