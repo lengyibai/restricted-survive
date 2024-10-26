@@ -1,4 +1,5 @@
 import { Assets, Graphics, TilingSprite } from "pixi.js";
+import gsap from "gsap";
 
 import { PlayerPositionUI } from "./ui/PlayerPositionUI";
 import { JoystickUI } from "./ui/JoystickUI";
@@ -43,8 +44,9 @@ export class GameSreen extends LibContainerSize {
     //地皮
     this.gameMap = new MapUI();
     this.addChild(this.gameMap);
-    // this.gameMap.x = -MapUI.MAP_SIZE.width / 2 + window.innerWidth / 2;
-    // this.gameMap.y = -MapUI.MAP_SIZE.height / 2 + window.innerHeight / 2;
+    this.gameMap.x = -MapUI.MAP_SIZE.width / 2 + window.innerWidth / 2;
+    this.gameMap.y = -MapUI.MAP_SIZE.height / 2 + window.innerHeight / 2;
+    mapStore.setPosition(this.gameMap.x, this.gameMap.y);
 
     //草地
     const grass = new TilingSprite(
@@ -68,8 +70,8 @@ export class GameSreen extends LibContainerSize {
     //玩家
     this.player = new PlayerUI();
     this.gameMap.addChild(this.player);
-    // this.player.x = (MapUI.MAP_SIZE.width - this.player.width) / 2;
-    // this.player.y = (MapUI.MAP_SIZE.height - this.player.height) / 2;
+    this.player.x = (MapUI.MAP_SIZE.width - this.player.width) / 2;
+    this.player.y = (MapUI.MAP_SIZE.height - this.player.height) / 2;
     this.findWayMap.setTargetPoint(MapUI.MAP_SIZE.width / 2, MapUI.MAP_SIZE.height / 2);
 
     //坐标信息
@@ -113,15 +115,13 @@ export class GameSreen extends LibContainerSize {
       y = Math.min(y, 0);
       y = Math.max(y, -MapUI.MAP_SIZE.height + window.innerHeight);
 
-      // gsap.killTweensOf(this.gameMap);
-      // gsap.to(this.gameMap, {
-      //   x,
-      //   y,
-      //   duration: 0.5,
-      //   ease: "power1.out",
-      // });
-      this.gameMap.x = x;
-      this.gameMap.y = y;
+      gsap.killTweensOf(this.gameMap);
+      gsap.to(this.gameMap, {
+        x,
+        y,
+        duration: 1,
+        ease: "power1.out",
+      });
       mapStore.setPosition(this.gameMap.x, this.gameMap.y);
     });
 
