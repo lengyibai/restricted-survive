@@ -1,13 +1,16 @@
 import gsap from "gsap";
 import { Application, type Container } from "pixi.js";
 import _debounce from "lodash/debounce";
-import type { DebouncedFunc } from "lodash";
 
 export const app = new Application<HTMLCanvasElement>({
   resizeTo: window,
   antialias: false,
   resolution: window.devicePixelRatio || 1,
   autoDensity: true,
+});
+
+app.view.addEventListener("contextmenu", (event) => {
+  event.preventDefault();
 });
 
 interface Screen extends Container {
@@ -17,8 +20,6 @@ interface Screen extends Container {
 class Navigation {
   /** 当前显示的屏幕 */
   currentScreen: Screen;
-  /** 防抖添加屏幕 */
-  private _debounceShowScreen: DebouncedFunc<(screen: any) => Promise<void>>;
 
   constructor() {
     const updateView = _debounce(() => {
@@ -26,19 +27,6 @@ class Navigation {
     });
 
     window.addEventListener("resize", updateView);
-
-    //切换屏幕后需要等待一秒才能继续添加屏幕
-    this._debounceShowScreen = _debounce(
-      async (screen) => {
-        this.addAndShowScreen(screen);
-        this.updateViewSize();
-      },
-      1000,
-      {
-        leading: true,
-        trailing: false,
-      },
-    );
   }
 
   /** @description 更新视图大小 */
@@ -46,7 +34,7 @@ class Navigation {
     if (!this.currentScreen) return;
     const winWidth = window.innerWidth;
     const winHeight = window.innerHeight;
-    this.currentScreen.resize(winWidth, winHeight);
+    this.currentScreen.resize?.(winWidth, winHeight);
   }
 
   /** @description 显示指定屏幕 */
@@ -55,7 +43,8 @@ class Navigation {
     if (this.currentScreen) {
       await this.hideAndRemoveScreen(this.currentScreen);
     }
-    this._debounceShowScreen(screen);
+    this.addAndShowScreen(screen);
+    this.updateViewSize();
   }
 
   /** 从舞台移除屏幕，取消链接更新和调整大小函数 */

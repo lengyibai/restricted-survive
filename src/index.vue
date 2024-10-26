@@ -2,7 +2,7 @@
 import { onMounted, ref } from "vue";
 
 import { app, navigation } from "./app";
-import { GameWorld } from "./screens/GameSreen";
+import { LoadScreen } from "./screens/LoadScreen";
 
 const appRef = ref<HTMLElement>();
 
@@ -11,7 +11,7 @@ onMounted(async () => {
     appRef.value.append(app.view);
     (globalThis as any).__PIXI_APP__ = app;
 
-    navigation.showScreen(GameWorld);
+    navigation.showScreen(LoadScreen);
   }
 });
 </script>

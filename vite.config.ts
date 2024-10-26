@@ -38,7 +38,6 @@ export default defineConfig(({ mode }) => {
           : [],
     },
     build: {
-      outDir: "dist/" + getViteEnv("VITE_GAME_NAME"),
       chunkSizeWarningLimit: 2000,
       reportCompressedSize: false,
       cssTarget: "chrome61",
@@ -46,11 +45,7 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: {
             game_vue: ["vue"],
-            game_vueuse: ["@vueuse/core"],
             game_pixi: ["pixi.js"],
-            game_spine: ["pixi-spine"],
-            game_pixi_plgins: ["pixi-filters", "@pixi/sound"],
-            game_js_plgins: ["decimal.js", "matter-js", "gsap", "dayjs", "mitt", "lodash"],
           },
           chunkFileNames: "assets/js/[name]-[hash].js",
           entryFileNames: "assets/js/[name]-[hash].js",
