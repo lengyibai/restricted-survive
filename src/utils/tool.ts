@@ -80,3 +80,80 @@ export const _decimal = (nums: number[], operators: ("+" | "-" | "*" | "/")[], p
 
 /** @description 角度转弧度 */
 export const _degToRad = (deg: number) => (deg * Math.PI) / 180;
+
+/**
+ * @description 判断当前移动方向（包含对角方向）
+ * @param currentX - 当前 X 坐标
+ * @param currentY - 当前 Y 坐标
+ * @param targetX - 目标 X 坐标
+ * @param targetY - 目标 Y 坐标
+ * @returns 返回移动方向的字符串
+ */
+export const _getMovementDirectionWithDiagonals = (
+  currentX: number,
+  currentY: number,
+  targetX: number,
+  targetY: number,
+) => {
+  // 计算角度 (弧度转为度数)
+  const radians = Math.atan2(targetY - currentY, targetX - currentX);
+  const angle = (radians * 180) / Math.PI;
+
+  // 确保角度在 0 ~ 360 范围内
+  const normalizedAngle = (angle + 360) % 360;
+
+  // 判定方向范围
+  if ((normalizedAngle >= 337.5 && normalizedAngle <= 360) || normalizedAngle < 22.5) {
+    return "right"; // 右
+  } else if (normalizedAngle >= 22.5 && normalizedAngle < 67.5) {
+    return "rightDown"; // 右下
+  } else if (normalizedAngle >= 67.5 && normalizedAngle < 112.5) {
+    return "down"; // 下
+  } else if (normalizedAngle >= 112.5 && normalizedAngle < 157.5) {
+    return "leftDown"; // 左下
+  } else if (normalizedAngle >= 157.5 && normalizedAngle < 202.5) {
+    return "left"; // 左
+  } else if (normalizedAngle >= 202.5 && normalizedAngle < 247.5) {
+    return "leftUp"; // 左上
+  } else if (normalizedAngle >= 247.5 && normalizedAngle < 292.5) {
+    return "up"; // 上
+  } else if (normalizedAngle >= 292.5 && normalizedAngle < 337.5) {
+    return "rightUp"; // 右上
+  }
+
+  return "unknown"; // 无法判定方向
+};
+
+/**
+ * @description 判断当前移动方向（只判断上下左右）
+ * @param currentX - 当前 X 坐标
+ * @param currentY - 当前 Y 坐标
+ * @param targetX - 目标 X 坐标
+ * @param targetY - 目标 Y 坐标
+ * @returns 返回移动方向的字符串
+ */
+export const _getVerticalHorizontalDirection = (
+  currentX: number,
+  currentY: number,
+  targetX: number,
+  targetY: number,
+) => {
+  const deltaX = targetX - currentX;
+  const deltaY = targetY - currentY;
+
+  // 判断水平方向
+  if (Math.abs(deltaX) > Math.abs(deltaY)) {
+    if (deltaX > 0) {
+      return "right"; // 右
+    } else {
+      return "left"; // 左
+    }
+  } else {
+    // 判断垂直方向
+    if (deltaY > 0) {
+      return "down"; // 下
+    } else {
+      return "up"; // 上
+    }
+  }
+};

@@ -1,9 +1,14 @@
 import {
+  AnimatedSprite,
+  Container,
   Graphics,
+  Rectangle,
+  Texture,
   Ticker,
-  type Container,
+  type BaseTexture,
   type DisplayObjectEvents,
   type FederatedPointerEvent,
+  type Resource,
 } from "pixi.js";
 
 /**
@@ -111,3 +116,52 @@ export const _resolveCollision = (mover: Container, entity: Container) => {
     }
   }
 };
+
+/** @description 通过精灵表图生成动画帧 */
+export const _generateFrames = (params: {
+  /** 精灵表图 */
+  texture: BaseTexture;
+  /** 单个帧的宽度 */
+  width: number;
+  /** 单个帧的高度 */
+  height: number;
+  /** 列数 */
+  col: number;
+  /** 行数 */
+  row: number;
+}) => {
+  const { texture, width, height, col, row } = params;
+  const animations: Texture<Resource>[][] = [];
+  for (let i = 0; i < row; i++) {
+    const frames: Texture<Resource>[] = [];
+    for (let j = 0; j < col; j++) {
+      const frame = new Texture(texture, new Rectangle(width * j, height * i, width, height));
+      frames.push(frame);
+    }
+    animations.push(frames);
+  }
+
+  return animations;
+};
+
+/** @description 精灵动画播放 */
+export class _SpriteAnimate extends AnimatedSprite {
+  constructor(frames: Texture<Resource>[], speed: number) {
+    super(frames);
+    this.animationSpeed = speed / 2 / 10;
+    this.loop = true;
+    this.play();
+    this.anchor.set(0);
+  }
+
+  /** @description 设置速度 */
+  setSpeed(speed: number) {
+    this.animationSpeed = speed;
+  }
+
+  /** @description 切换动画 */
+  toggleTexture(frames: Texture<Resource>[]) {
+    this.textures = frames;
+    this.play();
+  }
+}

@@ -2,6 +2,7 @@
 const gameManifest: Record<string, string> = {
   grass: "img/grass.jpg",
   player: "img/player.png",
+  chicken: "img/chicken.png",
 };
 
 /** @description loading页资源 */

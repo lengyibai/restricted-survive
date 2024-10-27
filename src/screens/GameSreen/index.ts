@@ -16,6 +16,31 @@ import { mapStore } from "@/store/map";
 
 /** @description 游戏世界 */
 export class GameSreen extends LibContainerSize {
+  /** 当前障碍物坐标组 */
+  private obstacleCoord: number[][] = [
+    [0, 100],
+    [50, 100],
+    [100, 100],
+    [150, 100],
+    [200, 100],
+    [250, 100],
+    [300, 100],
+    [350, 100],
+    [400, 100],
+    [400, 150],
+    [400, 200],
+    [400, 250],
+    [400, 300],
+    [400, 350],
+    [350, 350],
+    [300, 350],
+    [250, 350],
+    [200, 350],
+    [200, 300],
+    [200, 250],
+    [200, 200],
+    [200, 150],
+  ];
   /** 地图 */
   private gameMap: MapUI;
   /** 寻路地图 */
@@ -43,8 +68,8 @@ export class GameSreen extends LibContainerSize {
     //地图
     this.gameMap = new MapUI();
     this.addChild(this.gameMap);
-    this.gameMap.x = -MapUI.MAP_SIZE.width / 2 + window.innerWidth / 2;
-    this.gameMap.y = -MapUI.MAP_SIZE.height / 2 + window.innerHeight / 2;
+    // this.gameMap.x = -MapUI.MAP_SIZE.width / 2 + window.innerWidth / 2;
+    // this.gameMap.y = -MapUI.MAP_SIZE.height / 2 + window.innerHeight / 2;
     mapStore.setPosition(this.gameMap.x, this.gameMap.y);
 
     //草地
@@ -69,8 +94,8 @@ export class GameSreen extends LibContainerSize {
     //玩家
     this.player = new PlayerUI();
     this.gameMap.addChild(this.player);
-    this.player.x = (MapUI.MAP_SIZE.width - this.player.width) / 2;
-    this.player.y = (MapUI.MAP_SIZE.height - this.player.height) / 2;
+    // this.player.x = (MapUI.MAP_SIZE.width - this.player.width) / 2;
+    // this.player.y = (MapUI.MAP_SIZE.height - this.player.height) / 2;
     this.findWayMap.setTargetPoint(MapUI.MAP_SIZE.width / 2, MapUI.MAP_SIZE.height / 2);
 
     //摇杆
@@ -129,6 +154,10 @@ export class GameSreen extends LibContainerSize {
       playerStore.setPosition(this.player.x, this.player.y);
       mapStore.setPosition(this.gameMap.x, this.gameMap.y);
     });
+
+    this.obstacleCoord.forEach((coord) => {
+      this.createObstacle(coord[0], coord[1]);
+    });
   }
 
   /** @description 设置玩家移动相关事件 */
@@ -147,7 +176,7 @@ export class GameSreen extends LibContainerSize {
       //鼠标左键放置障碍物
       if (e.button === 0) {
         //将障碍物修正到单元格中
-        const { x: gridX, y: gridY } = FindWayMapUI.getGridCoordinates(posX, posY);
+        const { x: gridX, y: gridY } = FindWayMapUI.getMapPosToGridCoord(posX, posY);
         this.createObstacle(gridX * FindWayMapUI.CELL_SIZE, gridY * FindWayMapUI.CELL_SIZE);
       }
 
@@ -240,6 +269,9 @@ export class GameSreen extends LibContainerSize {
     //设置障碍物位置
     obstacle.x = x;
     obstacle.y = y;
+
+    this.obstacleCoord.push([x, y]);
+    console.log(this.obstacleCoord);
 
     //将这些位置标记为不可行走
     this.findWayMap.addObstacle(x, y);

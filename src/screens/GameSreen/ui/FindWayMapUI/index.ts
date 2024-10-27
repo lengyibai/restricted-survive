@@ -13,10 +13,6 @@ import { mapStore } from "@/store/map";
 export class FindWayMapUI extends LibContainerSize {
   /** 单元格的像素大小 */
   static readonly CELL_SIZE = 50;
-  /** 寻路网格 */
-  private grid: PF.Grid;
-  /** 寻路实例 */
-  private finder: PF.BestFirstFinder;
   /** 用于绘制路径的图形 */
   private pathGraphics: Graphics;
   /** 计算得到的路径 */
@@ -34,17 +30,19 @@ export class FindWayMapUI extends LibContainerSize {
     super(MapUI.MAP_SIZE.width, MapUI.MAP_SIZE.height);
 
     //创建寻路实例
-    this.finder = new PF.BestFirstFinder({
-      //@ts-ignore
-      allowDiagonal: true,
-      dontCrossCorners: true,
-    });
+    mapStore.setFinder(
+      new PF.BestFirstFinder({
+        //@ts-ignore
+        allowDiagonal: true,
+        dontCrossCorners: true,
+      }),
+    );
 
     //网格行列数
     this.gridSize = _decimal([MapUI.MAP_SIZE.width, FindWayMapUI.CELL_SIZE], ["/"]);
 
     //创建网格
-    this.grid = new PF.Grid(this.gridSize, this.gridSize);
+    mapStore.setGrid(new PF.Grid(this.gridSize, this.gridSize));
 
     //创建网格背景
     this.drawGridBackground();
@@ -68,8 +66,8 @@ export class FindWayMapUI extends LibContainerSize {
 
   /** @description 设置寻路障碍物 */
   addObstacle(x: number, y: number) {
-    const { x: gridX, y: gridY } = FindWayMapUI.getGridCoordinates(x, y);
-    this.grid.setWalkableAt(gridX, gridY, false);
+    const { x: gridX, y: gridY } = FindWayMapUI.getMapPosToGridCoord(x, y);
+    mapStore.grid.setWalkableAt(gridX, gridY, false);
   }
 
   /** @description 设置寻路终点坐标 */
@@ -84,19 +82,21 @@ export class FindWayMapUI extends LibContainerSize {
     let x = Math.abs(mapStore.x) + pageX;
     let y = Math.abs(mapStore.y) + pageY;
 
-    const playerGridCoord = FindWayMapUI.getGridCoordinates(playerStore.x, playerStore.y);
-    const targetGridCoord = FindWayMapUI.getGridCoordinates(x, y);
+    const playerGridCoord = FindWayMapUI.getMapPosToGridCoord(playerStore.x, playerStore.y);
+    const targetGridCoord = FindWayMapUI.getMapPosToGridCoord(x, y);
 
     //检查目标点周围的格子是否有障碍物，如果有障碍物，将目标点调整为其中心点
     if (this.hasObstacleAround(targetGridCoord.x, targetGridCoord.y)) {
-      const centerX = (targetGridCoord.x + 0.5) * FindWayMapUI.CELL_SIZE;
-      const centerY = (targetGridCoord.y + 0.5) * FindWayMapUI.CELL_SIZE;
+      const { x: centerX, y: centerY } = FindWayMapUI.getGridCoordToMapPos(
+        targetGridCoord.x,
+        targetGridCoord.y,
+      );
       x = centerX;
       y = centerY;
     }
 
     //计算从玩家到目标的路径
-    this.path = this.calculatePath(playerGridCoord, targetGridCoord);
+    this.path = FindWayMapUI.calculatePath(playerGridCoord, targetGridCoord);
     this.drawPath(this.path, x, y);
     this.moveGridPlayer(x, y);
     this.setTargetPoint(x, y);
@@ -112,17 +112,6 @@ export class FindWayMapUI extends LibContainerSize {
     this.targetPoint.visible = false;
   }
 
-  /** @description 获取某个单元格的中心坐标
-   * @param x - 单元格列数
-   * @param y - 单元格行数
-   */
-  private getCellCenter(x: number, y: number) {
-    return {
-      x: (x + 0.5) * FindWayMapUI.CELL_SIZE,
-      y: (y + 0.5) * FindWayMapUI.CELL_SIZE,
-    };
-  }
-
   /** @description 绘制路径 */
   private drawPath(path: number[][], targetX: number, targetY: number) {
     this.pathGraphics.clear();
@@ -132,8 +121,7 @@ export class FindWayMapUI extends LibContainerSize {
 
       for (let i = 0; i < path.length; i++) {
         const point = path[i];
-        const x = point[0] * FindWayMapUI.CELL_SIZE + FindWayMapUI.CELL_SIZE / 2;
-        const y = point[1] * FindWayMapUI.CELL_SIZE + FindWayMapUI.CELL_SIZE / 2;
+        const { x, y } = FindWayMapUI.getGridCoordToMapPos(point[0], point[1]);
 
         //路径起点为当前玩家坐标
         if (i === 0) {
@@ -168,18 +156,6 @@ export class FindWayMapUI extends LibContainerSize {
     this.addChild(gridGraphics);
   }
 
-  /** @description 计算从起点到终点的路径 */
-  private calculatePath(
-    start: { x: number; y: number },
-    end: { x: number; y: number },
-  ): number[][] {
-    //获取起点和终点的节点
-    const startNode = this.grid.getNodeAt(start.x, start.y);
-    const endNode = this.grid.getNodeAt(end.x, end.y);
-    //使用 A* 算法计算路径
-    return this.finder.findPath(startNode.x, startNode.y, endNode.x, endNode.y, this.grid.clone());
-  }
-
   /** @description 玩家沿路径移动的逻辑
    * @param x 地图上点击的坐标
    * @param y 地图上点击的坐标
@@ -197,6 +173,7 @@ export class FindWayMapUI extends LibContainerSize {
       if (pathIndex < this.path.length) {
         //获取下一个路径点目标点
         const nextPoint = this.path[pathIndex];
+
         let targetX = nextPoint[0] * FindWayMapUI.CELL_SIZE;
         let targetY = nextPoint[1] * FindWayMapUI.CELL_SIZE;
 
@@ -249,7 +226,7 @@ export class FindWayMapUI extends LibContainerSize {
       const neighborY = y + dir.y;
 
       //确保邻近格子在有效范围内
-      if (!this.grid.isWalkableAt(neighborX, neighborY)) {
+      if (!mapStore.grid.isWalkableAt(neighborX, neighborY)) {
         return true;
       }
     }
@@ -264,9 +241,31 @@ export class FindWayMapUI extends LibContainerSize {
    * @param cellSize - 每个格子的像素大小
    * @returns 返回网格坐标 { gridX, gridY }
    */
-  static getGridCoordinates(pixelX: number, pixelY: number) {
+  static getMapPosToGridCoord(pixelX: number, pixelY: number) {
     const x = Math.floor(pixelX / FindWayMapUI.CELL_SIZE);
     const y = Math.floor(pixelY / FindWayMapUI.CELL_SIZE);
     return { x, y };
+  }
+
+  /** @description 将单元格行列坐标转位地图坐标 */
+  static getGridCoordToMapPos(gridX: number, gridY: number) {
+    const x = (gridX + 0.5) * FindWayMapUI.CELL_SIZE;
+    const y = (gridY + 0.5) * FindWayMapUI.CELL_SIZE;
+    return { x, y };
+  }
+
+  /** @description 计算从起点到终点的路径 */
+  static calculatePath(start: { x: number; y: number }, end: { x: number; y: number }): number[][] {
+    //获取起点和终点的节点
+    const startNode = mapStore.grid.getNodeAt(start.x, start.y);
+    const endNode = mapStore.grid.getNodeAt(end.x, end.y);
+    //使用 A* 算法计算路径
+    return mapStore.finder.findPath(
+      startNode.x,
+      startNode.y,
+      endNode.x,
+      endNode.y,
+      mapStore.grid.clone(),
+    );
   }
 }

@@ -1,3 +1,5 @@
+import PF from "pathfinding";
+
 class MapStore {
   /** 地图X坐标 */
   x = 0;
@@ -7,6 +9,10 @@ class MapStore {
   coordX = 0;
   /** 当前点击的地图坐标系Y坐标 */
   coordY = 0;
+  /** 寻路网格 */
+  grid: PF.Grid;
+  /** 寻路实例 */
+  finder: PF.BestFirstFinder;
 
   constructor() {}
 
@@ -20,6 +26,16 @@ class MapStore {
   setCoord(x: number, y: number) {
     this.coordX = x;
     this.coordY = y;
+  }
+
+  /** @description 设置寻路网格 */
+  setGrid(grid: PF.Grid) {
+    this.grid = grid;
+  }
+
+  /** @description 设置寻路实例 */
+  setFinder(finder: PF.BestFirstFinder) {
+    this.finder = finder;
   }
 }
 
