@@ -14,7 +14,7 @@ export class FindWayMapUI extends LibContainerSize {
   /** 单元格的像素大小 */
   static readonly CELL_SIZE = 50;
   /** 寻路网格 */
-  grid: PF.Grid;
+  private grid: PF.Grid;
   /** 寻路实例 */
   private finder: PF.BestFirstFinder;
   /** 用于绘制路径的图形 */
@@ -58,6 +58,26 @@ export class FindWayMapUI extends LibContainerSize {
     this.addChild(this.targetPoint);
   }
 
+  /** @description 注册事件 */
+  setEvent(eventName: "move", callback: (x: number, y: number) => void): void;
+  setEvent(eventName: "move", callback: (x: number, y: number) => void): void {
+    if (eventName === "move") {
+      this.playerMove = callback;
+    }
+  }
+
+  /** @description 设置寻路障碍物 */
+  addObstacle(x: number, y: number) {
+    const { x: gridX, y: gridY } = FindWayMapUI.getGridCoordinates(x, y);
+    this.grid.setWalkableAt(gridX, gridY, false);
+  }
+
+  /** @description 设置寻路终点坐标 */
+  setTargetPoint(x: number, y: number) {
+    this.targetPoint.x = x - this.targetPoint.width / 2;
+    this.targetPoint.y = y - this.targetPoint.height / 2;
+  }
+
   /** @description 开始寻路 */
   startFindWay(pageX: number, pageY: number) {
     //屏幕坐标转地图坐标
@@ -82,17 +102,14 @@ export class FindWayMapUI extends LibContainerSize {
     this.setTargetPoint(x, y);
   }
 
-  /**
-   * @description 将坐标转换为单元格行列坐标
-   * @param pixelX - 玩家在地图上的 X 坐标（以像素为单位）
-   * @param pixelY - 玩家在地图上的 Y 坐标（以像素为单位）
-   * @param cellSize - 每个格子的像素大小
-   * @returns 返回网格坐标 { gridX, gridY }
-   */
-  static getGridCoordinates(pixelX: number, pixelY: number) {
-    const x = Math.floor(pixelX / FindWayMapUI.CELL_SIZE);
-    const y = Math.floor(pixelY / FindWayMapUI.CELL_SIZE);
-    return { x, y };
+  /** @description 中断自动寻路移动 */
+  killPathfindingMove(clearPath = true) {
+    this.pathfindingMove && Ticker.shared.remove(this.pathfindingMove);
+    this.pathfindingMove = undefined;
+    clearPath && this.pathGraphics.clear();
+
+    this.setTargetPoint(playerStore.x, playerStore.y);
+    this.targetPoint.visible = false;
   }
 
   /** @description 获取某个单元格的中心坐标
@@ -133,16 +150,6 @@ export class FindWayMapUI extends LibContainerSize {
     }
   }
 
-  /** @description 中断自动寻路移动 */
-  killPathfindingMove(clearPath = true) {
-    this.pathfindingMove && Ticker.shared.remove(this.pathfindingMove);
-    this.pathfindingMove = undefined;
-    clearPath && this.pathGraphics.clear();
-
-    this.setTargetPoint(playerStore.x, playerStore.y);
-    this.targetPoint.visible = false;
-  }
-
   /** @description 创建网格背景 */
   private drawGridBackground() {
     const gridGraphics = new Graphics();
@@ -171,12 +178,6 @@ export class FindWayMapUI extends LibContainerSize {
     const endNode = this.grid.getNodeAt(end.x, end.y);
     //使用 A* 算法计算路径
     return this.finder.findPath(startNode.x, startNode.y, endNode.x, endNode.y, this.grid.clone());
-  }
-
-  /** @description 设置寻路终点坐标 */
-  setTargetPoint(x: number, y: number) {
-    this.targetPoint.x = x - this.targetPoint.width / 2;
-    this.targetPoint.y = y - this.targetPoint.height / 2;
   }
 
   /** @description 玩家沿路径移动的逻辑
@@ -227,14 +228,6 @@ export class FindWayMapUI extends LibContainerSize {
     Ticker.shared.add(this.pathfindingMove);
   }
 
-  /** @description 注册事件 */
-  setEvent(eventName: "move", callback: (x: number, y: number) => void): void;
-  setEvent(eventName: "move", callback: (x: number, y: number) => void): void {
-    if (eventName === "move") {
-      this.playerMove = callback;
-    }
-  }
-
   /**
    * @description 检查目标点周围是否有障碍物
    * @param targetCoord - 目标单元格行列
@@ -262,5 +255,18 @@ export class FindWayMapUI extends LibContainerSize {
     }
 
     return false;
+  }
+
+  /**
+   * @description 将坐标转换为单元格行列坐标
+   * @param pixelX - 玩家在地图上的 X 坐标（以像素为单位）
+   * @param pixelY - 玩家在地图上的 Y 坐标（以像素为单位）
+   * @param cellSize - 每个格子的像素大小
+   * @returns 返回网格坐标 { gridX, gridY }
+   */
+  static getGridCoordinates(pixelX: number, pixelY: number) {
+    const x = Math.floor(pixelX / FindWayMapUI.CELL_SIZE);
+    const y = Math.floor(pixelY / FindWayMapUI.CELL_SIZE);
+    return { x, y };
   }
 }

@@ -9,7 +9,7 @@ import { EntityMapUI } from "./ui/EntityMapUI";
 import { PlayerUI } from "./ui/PlayerUI";
 
 import { LibContainerSize } from "@/ui/other/LibContainerSize";
-import { _overflowHidden, _setEvent, _trigger100Times } from "@/utils/pixiTool";
+import { _overflowHidden, _resolveCollision, _setEvent, _trigger100Times } from "@/utils/pixiTool";
 import { LibText } from "@/ui/other/LibText";
 import { playerStore } from "@/store/player";
 import { mapStore } from "@/store/map";
@@ -24,7 +24,6 @@ export class GameSreen extends LibContainerSize {
   private entityMap: EntityMapUI;
   /** 玩家 */
   private player: PlayerUI;
-
   /** 坐标信息 */
   private positionText: PlayerPositionUI;
   /** 摇杆 */
@@ -41,7 +40,7 @@ export class GameSreen extends LibContainerSize {
     super(window.innerWidth, window.innerHeight);
     _overflowHidden(this);
 
-    //地皮
+    //地图
     this.gameMap = new MapUI();
     this.addChild(this.gameMap);
     this.gameMap.x = -MapUI.MAP_SIZE.width / 2 + window.innerWidth / 2;
@@ -74,56 +73,16 @@ export class GameSreen extends LibContainerSize {
     this.player.y = (MapUI.MAP_SIZE.height - this.player.height) / 2;
     this.findWayMap.setTargetPoint(MapUI.MAP_SIZE.width / 2, MapUI.MAP_SIZE.height / 2);
 
-    //坐标信息
-    this.positionText = new PlayerPositionUI();
-    this.addChild(this.positionText);
-    this.positionText.y = window.innerHeight - this.positionText.height;
-
     //摇杆
     this.joystick = new JoystickUI(50);
     this.addChild(this.joystick);
     this.joystick.x = window.innerWidth / 2;
     this.joystick.y = window.innerHeight - this.joystick.height;
 
-    //摄像头跟随玩家移动
-    _trigger100Times(() => {
-      this.handlePlayerCollision();
-
-      //限制玩家移动范围
-      this.player.x = Math.max(0, this.player.x);
-      this.player.x = Math.min(MapUI.MAP_SIZE.width - this.player.width, this.player.x);
-      this.player.y = Math.max(0, this.player.y);
-      this.player.y = Math.min(MapUI.MAP_SIZE.height - this.player.height, this.player.y);
-      playerStore.setPosition(this.player.x, this.player.y);
-
-      //设置玩家坐标信息
-      const { x: playerCoordX, y: playerCoordy } = MapUI.posToCoord(
-        this.player.x,
-        this.player.y,
-        PlayerUI.SIZE.width,
-        PlayerUI.SIZE.height,
-      );
-      this.positionText.setPlayerPosition(playerCoordX, playerCoordy);
-
-      //地图目标点
-      let x = -this.player.x + window.innerWidth / 2;
-      let y = -this.player.y + window.innerHeight / 2;
-
-      //限制地图移动范围
-      x = Math.min(x, 0);
-      x = Math.max(x, -MapUI.MAP_SIZE.width + window.innerWidth);
-      y = Math.min(y, 0);
-      y = Math.max(y, -MapUI.MAP_SIZE.height + window.innerHeight);
-
-      gsap.killTweensOf(this.gameMap);
-      gsap.to(this.gameMap, {
-        x,
-        y,
-        duration: 1,
-        ease: "power1.out",
-      });
-      mapStore.setPosition(this.gameMap.x, this.gameMap.y);
-    });
+    //坐标信息
+    this.positionText = new PlayerPositionUI();
+    this.addChild(this.positionText);
+    this.positionText.y = window.innerHeight - this.positionText.height;
 
     const tip = new LibText({
       text: "电脑：左键放置障碍物，右键自动移动到目标点，WASD和滑杆控制移动。\n手机：点击放置障碍物，滑杆控制移动。",
@@ -143,6 +102,33 @@ export class GameSreen extends LibContainerSize {
 
     //设置玩家移动相关事件
     this.setEvent();
+
+    //摄像头跟随玩家移动
+    _trigger100Times(() => {
+      //键盘移动玩家
+      const px = PlayerUI.getPlayerMovePixel();
+      if (this.playerMoveDirection.left) this.player.x -= px;
+      if (this.playerMoveDirection.right) this.player.x += px;
+      if (this.playerMoveDirection.up) this.player.y -= px;
+      if (this.playerMoveDirection.down) this.player.y += px;
+
+      //玩家、实体、地图碰撞处理
+      this.handlePlayerCollision();
+      this.handlePlayerMapCollision();
+      this.handleMapScreenCollision();
+
+      //设置玩家坐标信息
+      const { x: playerCoordX, y: playerCoordy } = MapUI.posToCoord(
+        this.player.x,
+        this.player.y,
+        PlayerUI.SIZE.width,
+        PlayerUI.SIZE.height,
+      );
+      this.positionText.setPlayerPosition(playerCoordX, playerCoordy);
+
+      playerStore.setPosition(this.player.x, this.player.y);
+      mapStore.setPosition(this.gameMap.x, this.gameMap.y);
+    });
   }
 
   /** @description 设置玩家移动相关事件 */
@@ -160,8 +146,9 @@ export class GameSreen extends LibContainerSize {
 
       //鼠标左键放置障碍物
       if (e.button === 0) {
-        const targetGridCoord = FindWayMapUI.getGridCoordinates(posX, posY);
-        this.createObstacle(targetGridCoord.x, targetGridCoord.y);
+        //将障碍物修正到单元格中
+        const { x: gridX, y: gridY } = FindWayMapUI.getGridCoordinates(posX, posY);
+        this.createObstacle(gridX * FindWayMapUI.CELL_SIZE, gridY * FindWayMapUI.CELL_SIZE);
       }
 
       //鼠标右键寻路
@@ -170,16 +157,6 @@ export class GameSreen extends LibContainerSize {
         mapStore.setCoord(coordX, coordY);
       }
     });
-
-    //键盘事件按键状态监听
-    const keyMovePlayerAndMap = () => {
-      const px = PlayerUI.getPlayerMovePixel();
-      if (this.playerMoveDirection.left) this.player.x -= px;
-      if (this.playerMoveDirection.right) this.player.x += px;
-      if (this.playerMoveDirection.up) this.player.y -= px;
-      if (this.playerMoveDirection.down) this.player.y += px;
-    };
-    _trigger100Times(keyMovePlayerAndMap.bind(this));
 
     //键盘事件
     const keys: Record<string, string> = {
@@ -217,12 +194,40 @@ export class GameSreen extends LibContainerSize {
 
   /** @description 处理玩家与障碍物的碰撞 */
   private handlePlayerCollision() {
-    for (const obstacle of this.entityMap.obstacles) {
-      if (this.entityMap.testForAABB(this.player, obstacle)) {
-        // 碰撞检测，限制玩家的移动
-        this.entityMap.resolveCollision(this.player, obstacle);
-      }
+    //循环地图中所有的障碍物
+    for (const obstacle of this.entityMap.entities) {
+      //检测玩家与障碍物的碰撞，并限制玩家的移动
+      _resolveCollision(this.player, obstacle);
     }
+  }
+
+  /** @description 处理玩家与地图边界的碰撞 */
+  private handlePlayerMapCollision() {
+    this.player.x = Math.max(0, this.player.x);
+    this.player.x = Math.min(MapUI.MAP_SIZE.width - this.player.width, this.player.x);
+    this.player.y = Math.max(0, this.player.y);
+    this.player.y = Math.min(MapUI.MAP_SIZE.height - this.player.height, this.player.y);
+  }
+
+  /** @description 处理地图边界与屏幕边界的碰撞 */
+  private handleMapScreenCollision() {
+    //地图目标点
+    let x = -this.player.x + window.innerWidth / 2;
+    let y = -this.player.y + window.innerHeight / 2;
+
+    //限制地图移动范围
+    x = Math.min(x, 0);
+    x = Math.max(x, -MapUI.MAP_SIZE.width + window.innerWidth);
+    y = Math.min(y, 0);
+    y = Math.max(y, -MapUI.MAP_SIZE.height + window.innerHeight);
+
+    gsap.killTweensOf(this.gameMap);
+    gsap.to(this.gameMap, {
+      x,
+      y,
+      duration: 0.5,
+      ease: "power1.out",
+    });
   }
 
   /** @description 创建障碍物图形 */
@@ -233,13 +238,12 @@ export class GameSreen extends LibContainerSize {
     obstacle.endFill();
 
     //设置障碍物位置
-    obstacle.x = x * FindWayMapUI.CELL_SIZE;
-    obstacle.y = y * FindWayMapUI.CELL_SIZE;
+    obstacle.x = x;
+    obstacle.y = y;
 
     //将这些位置标记为不可行走
-    this.findWayMap.grid.setWalkableAt(x, y, false);
-
+    this.findWayMap.addObstacle(x, y);
     //将障碍物添加到实体地图中
-    this.entityMap.addObstacle(obstacle);
+    this.entityMap.addEntity(obstacle);
   }
 }

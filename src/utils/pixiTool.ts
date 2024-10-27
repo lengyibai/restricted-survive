@@ -62,3 +62,52 @@ export const _trigger100Times = (callback: () => void) => {
   };
   Ticker.shared.add(animateLoop, this);
 };
+
+/** @description 碰撞检测限制移动 */
+export const _resolveCollision = (mover: Container, entity: Container) => {
+  const moverBounds = mover.getBounds();
+  const entityBounds = entity.getBounds();
+
+  //检测是否碰撞到实体左侧
+  const left = moverBounds.x + moverBounds.width > entityBounds.x;
+  //检测是否碰撞到实体右侧
+  const right = moverBounds.x < entityBounds.x + entityBounds.width;
+  //检测是否碰撞到实体上方
+  const top = moverBounds.y + moverBounds.height > entityBounds.y;
+  //检测是否碰撞到实体下方
+  const bottom = moverBounds.y < entityBounds.y + entityBounds.height;
+
+  //如果移动元素有一个方向没有与实体碰撞，则不移动
+  if (!(left && right && top && bottom)) return;
+
+  //计算移动物体和静止物体碰撞后重叠的距离
+  const overlapX = Math.min(
+    moverBounds.x + moverBounds.width - entityBounds.x,
+    entityBounds.x + entityBounds.width - moverBounds.x,
+  );
+  const overlapY = Math.min(
+    moverBounds.y + moverBounds.height - entityBounds.y,
+    entityBounds.y + entityBounds.height - moverBounds.y,
+  );
+
+  //如果X的重叠量小于Y，则为x轴碰撞
+  if (overlapX < overlapY) {
+    //从左侧碰撞
+    if (moverBounds.x < entityBounds.x) {
+      mover.x -= overlapX;
+    }
+    //从右侧碰撞
+    else {
+      mover.x += overlapX;
+    }
+  } else {
+    //从上方碰撞
+    if (moverBounds.y < entityBounds.y) {
+      mover.y -= overlapY;
+    }
+    //从下方碰撞
+    else {
+      mover.y += overlapY;
+    }
+  }
+};
