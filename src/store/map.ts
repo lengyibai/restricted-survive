@@ -13,6 +13,8 @@ class MapStore {
   grid: PF.Grid;
   /** 寻路实例 */
   finder: PF.BestFirstFinder;
+  /** 设置实体列表 */
+  entities: any[] = [];
 
   constructor() {}
 
@@ -36,6 +38,11 @@ class MapStore {
   /** @description 设置寻路实例 */
   setFinder(finder: PF.BestFirstFinder) {
     this.finder = finder;
+  }
+
+  /** @description 设置实体列表 */
+  setEntities(entities: any[]) {
+    this.entities = entities;
   }
 }
 
