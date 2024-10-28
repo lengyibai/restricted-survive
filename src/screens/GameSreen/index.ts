@@ -96,6 +96,7 @@ export class GameSreen extends LibContainerSize {
     this.gameMap.addChild(this.player);
     // this.player.x = (MapUI.MAP_SIZE.width - this.player.width) / 2;
     // this.player.y = (MapUI.MAP_SIZE.height - this.player.height) / 2;
+    this.findWayMap.setTargetPoint(MapUI.MAP_SIZE.width / 2, MapUI.MAP_SIZE.height / 2);
 
     //摇杆
     this.joystick = new JoystickUI(50);
@@ -174,7 +175,7 @@ export class GameSreen extends LibContainerSize {
 
       //鼠标右键寻路
       if (e.button === 2) {
-        this.player.startFindWay(pageX, pageY);
+        this.findWayMap.startFindWay(pageX, pageY);
         mapStore.setCoord(coordX, coordY);
       }
     });
@@ -188,14 +189,12 @@ export class GameSreen extends LibContainerSize {
     };
     window.addEventListener("keydown", (e) => {
       if (Object.keys(keys).includes(e.code)) {
-        this.player.killPathfindingMove();
-        this.player.move(keys[e.code], true);
+        this.findWayMap.killPathfindingMove();
         this.playerMoveDirection[keys[e.code]] = true;
       }
     });
     window.addEventListener("keyup", (e) => {
       if (Object.keys(keys).includes(e.code)) {
-        this.player.move(keys[e.code], false);
       }
     });
 
@@ -204,11 +203,11 @@ export class GameSreen extends LibContainerSize {
       const px = PlayerUI.getMovePixel();
       this.player.x += dx * px;
       this.player.y -= dy * px;
-      this.player.killPathfindingMove();
+      this.findWayMap.killPathfindingMove();
     });
 
     //寻路地图事件
-    this.player.setEvent("move", (x, y) => {
+    this.findWayMap.setEvent("move", (x, y) => {
       this.player.x += x;
       this.player.y += y;
     });
