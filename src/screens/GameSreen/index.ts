@@ -173,12 +173,7 @@ export class GameSreen extends LibContainerSize {
     });
 
     //摇杆事件
-    this.joystick.addEvent("move", (dx, dy) => {
-      const px = PlayerUI.getMovePixel();
-      this.player.x += dx * px;
-      this.player.y -= dy * px;
-      this.player.killPathfindingMove();
-    });
+    this.joystick.addEvent("move", this.player.joystickMove.bind(this.player));
 
     //寻路地图事件
     this.player.setEvent("move", (x, y) => {

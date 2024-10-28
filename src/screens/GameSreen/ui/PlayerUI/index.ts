@@ -31,7 +31,9 @@ export class PlayerUI extends Container {
     down: false,
   };
   /** 上一次移动的方向 */
-  private lastDirection: string;
+  private lastDirection: Game.DirectionFour;
+  /** 是否处于键盘按下 */
+  private isKeyDown = false;
   /** 计算得到的路径 */
   private path: number[][];
   /** 动画 */
@@ -61,6 +63,7 @@ export class PlayerUI extends Container {
     this.addChild(this.animate);
 
     _trigger100Times(() => {
+      if (!this.isKeyDown) return;
       const { left, right, up, down } = this.playerMoveDirection;
 
       const px = PlayerUI.getMovePixel();
@@ -84,20 +87,7 @@ export class PlayerUI extends Container {
 
       //如果方向发生变化，则转向
       if (this.lastDirection !== direction) {
-        this.lastDirection = direction;
-        const animate = this.animations[this.DIRECTIONS[direction]];
-        this.animate.toggleTexture(animate);
-      }
-
-      //方向互斥或全方向停止时，停止动画
-      if (
-        (left && right) ||
-        (up && down) ||
-        Object.values(this.playerMoveDirection).every((v) => !v)
-      ) {
-        this.animate.stop();
-      } else {
-        this.animate.play();
+        this.turnDirection(direction);
       }
     });
 
@@ -110,13 +100,15 @@ export class PlayerUI extends Container {
     };
     window.addEventListener("keydown", (e) => {
       if (Object.keys(keys).includes(e.code)) {
-        this.killPathfindingMove();
+        this.isKeyDown = true;
         this.moveDirection(keys[e.code], true);
       }
     });
     window.addEventListener("keyup", (e) => {
       if (Object.keys(keys).includes(e.code)) {
         this.moveDirection(keys[e.code], false);
+        this.isKeyDown = false;
+        this.animate.stop();
       }
     });
   }
@@ -131,7 +123,51 @@ export class PlayerUI extends Container {
 
   /** @description 控制移动方向 */
   moveDirection(direction: Game.DirectionFour, status: boolean) {
+    status && this.killPathfindingMove();
     this.playerMoveDirection[direction] = status;
+  }
+
+  /** @description 设置转向 */
+  turnDirection(direction: Game.DirectionFour) {
+    this.lastDirection = direction;
+    const animate = this.animations[this.DIRECTIONS[direction]];
+    this.animate.toggleTexture(animate);
+    this.animate.play();
+  }
+
+  /** @description 摇杆事件 */
+  joystickMove(dx: number, dy: number) {
+    const px = PlayerUI.getMovePixel();
+    this.x += dx * px;
+    this.y -= dy * px;
+    this.killPathfindingMove();
+
+    //当前方向
+    let direction: Game.DirectionFour = "down";
+
+    //判断移动方向
+    if (dx === 1 || ((dy < 0.5 || dy > -0.5) && dx === 1)) {
+      direction = "right";
+    }
+    if (dx === -1 || ((dy < 0.5 || dy > -0.5) && dx === -1)) {
+      direction = "left";
+    }
+    if (dy === 1 || ((dx < 0.5 || dx > -0.5) && dy === 1)) {
+      direction = "up";
+    }
+    if (dy === -1 || ((dx < 0.5 || dx > -0.5) && dy === -1)) {
+      direction = "down";
+    }
+
+    //如果方向发生变化，则转向
+    if (this.lastDirection !== direction) {
+      this.turnDirection(direction);
+    }
+
+    //如果没有按下摇杆，则停止动画
+    if (dx === 0 && dy === 0) {
+      this.animate.stop();
+    }
   }
 
   /** @description 开始寻路 */

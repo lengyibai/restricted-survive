@@ -150,7 +150,6 @@ export class _SpriteAnimate extends AnimatedSprite {
     super(frames);
     this.animationSpeed = speed / 2 / 10;
     this.loop = true;
-    this.play();
     this.anchor.set(0);
   }
 

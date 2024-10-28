@@ -17,6 +17,8 @@ export class JoystickUI extends Container {
   private result = { x: 0, y: 0 };
   /** 处理摇杆移动的回调函数 */
   private onMove: (dx: number, dy: number) => void;
+  /** 处理摇杆离开的回调函数 */
+  private onLeave: () => void;
 
   constructor(radius: number) {
     super();
@@ -104,9 +106,15 @@ export class JoystickUI extends Container {
 
   /** @description 注册事件 */
   addEvent(eventName: "move", callback: (dx: number, dy: number) => void): void;
-  addEvent(eventName: "move", callback: (dx: number, dy: number) => void): void {
+  addEvent(eventName: "leave", callback: () => void): void;
+  addEvent(
+    eventName: "move" | "leave",
+    callback: (() => void) | ((dx: number, dy: number) => void),
+  ): void {
     if (eventName === "move") {
       this.onMove = callback;
+    }
+    if (eventName === "leave") {
     }
   }
 }
