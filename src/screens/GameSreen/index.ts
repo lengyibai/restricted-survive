@@ -130,6 +130,13 @@ export class GameSreen extends LibContainerSize {
 
     //摄像头跟随玩家移动
     _trigger100Times(() => {
+      //键盘移动玩家
+      const px = PlayerUI.getMovePixel();
+      if (this.playerMoveDirection.left) this.player.x -= px;
+      if (this.playerMoveDirection.right) this.player.x += px;
+      if (this.playerMoveDirection.up) this.player.y -= px;
+      if (this.playerMoveDirection.down) this.player.y += px;
+
       //玩家、实体、地图碰撞处理
       this.handlePlayerCollision();
       this.handlePlayerMapCollision();
@@ -139,8 +146,8 @@ export class GameSreen extends LibContainerSize {
       const { x: playerCoordX, y: playerCoordy } = MapUI.posToCoord(
         this.player.x,
         this.player.y,
-        this.player.width,
-        this.player.height,
+        PlayerUI.SIZE.width,
+        PlayerUI.SIZE.height,
       );
       this.positionText.setPlayerPosition(playerCoordX, playerCoordy);
 
@@ -195,6 +202,7 @@ export class GameSreen extends LibContainerSize {
     });
     window.addEventListener("keyup", (e) => {
       if (Object.keys(keys).includes(e.code)) {
+        this.playerMoveDirection[keys[e.code]] = false;
       }
     });
 
