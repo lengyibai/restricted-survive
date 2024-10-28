@@ -132,8 +132,8 @@ export class GameSreen extends LibContainerSize {
         PlayerUI.SIZE.width,
         PlayerUI.SIZE.height,
       );
-      this.positionText.setPlayerPosition(playerCoordX, playerCoordy);
 
+      this.positionText.setPlayerPosition(playerCoordX, playerCoordy);
       playerStore.setPosition(this.player.x, this.player.y);
       mapStore.setPosition(this.gameMap.x, this.gameMap.y);
     });
