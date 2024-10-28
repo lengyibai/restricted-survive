@@ -1,11 +1,11 @@
 import { Assets, Container, Graphics, Ticker, type Resource, type Texture } from "pixi.js";
 
-import { _generateFrames, _SpriteAnimate } from "@/utils/pixiTool";
+import { _generateFrames, _SpriteAnimate, _trigger100Times } from "@/utils/pixiTool";
 import { FindWayMapUI } from "@/screens/GameSreen/ui/FindWayMapUI";
 import { _getMovementDirectionWithDiagonals, _getVerticalHorizontalDirection } from "@/utils/tool";
 
-/** @description 鸡 */
-export class AnimalChicken extends Container {
+/** @description 牛 */
+export class PlayerUI extends Container {
   /** 速度 */
   static readonly SPEED = 10;
   /** @description 当前寻路路径 */
@@ -16,26 +16,75 @@ export class AnimalChicken extends Container {
   private animations: Texture<Resource>[][];
   /** 寻路移动函数 */
   private pathfindingMove?: () => void;
+  /** 按下不同方向键时，控制玩家移动方向状态 */
+  private playerMoveDirection: Record<string, boolean> = {
+    left: false,
+    right: false,
+    up: false,
+    down: false,
+  };
+  /** 上一次移动的方向 */
+  private lastDirection: string;
+  /** 上一次玩家坐标 */
+  private lastPosition: { x: number; y: number } = { x: 0, y: 0 };
 
   constructor() {
     super();
 
     this.animations = _generateFrames({
-      texture: Assets.get("chicken"),
-      width: 32,
-      height: 32,
-      col: 3,
+      texture: Assets.get("player"),
+      width: 45,
+      height: 60,
+      col: 4,
       row: 4,
     });
 
     // 创建动画精灵
-    this.animate = new _SpriteAnimate(this.animations[2], AnimalChicken.SPEED);
+    this.animate = new _SpriteAnimate(this.animations[2], PlayerUI.SPEED);
     this.addChild(this.animate);
     this.animate.play();
 
-    setTimeout(() => {
-      this.startFindWay(3, 3);
-    }, 1000);
+    //摄像头跟随玩家移动
+    _trigger100Times(() => {
+      //键盘移动玩家
+      const px = PlayerUI.getMovePixel();
+      if (this.playerMoveDirection.left) this.x -= px;
+      if (this.playerMoveDirection.right) this.x += px;
+      if (this.playerMoveDirection.up) this.y -= px;
+      if (this.playerMoveDirection.down) this.y += px;
+
+      const directions: Record<string, number> = {
+        down: 0,
+        left: 1,
+        right: 3,
+        up: 2,
+      };
+
+      let direction = "";
+      if (this.playerMoveDirection.left) {
+        direction = "left";
+      } else if (this.playerMoveDirection.right) {
+        direction = "right";
+      } else if (this.playerMoveDirection.up) {
+        direction = "up";
+      } else if (this.playerMoveDirection.down) {
+        direction = "down";
+      } else {
+        direction = "down";
+      }
+
+      if (this.lastDirection !== direction) {
+        this.lastDirection = direction;
+        const animate = this.animations[directions[direction]];
+        this.animate.toggleTexture(animate);
+      }
+
+      if (Object.values(this.playerMoveDirection).every((v) => !v)) {
+        this.animate.stop();
+      } else {
+        this.animate.play();
+      }
+    });
   }
 
   /** @description 开始寻路 */
@@ -50,6 +99,11 @@ export class AnimalChicken extends Container {
     });
   }
 
+  /** @description 控制移动方向 */
+  move(direction: string, status: boolean) {
+    this.playerMoveDirection[direction] = status;
+  }
+
   /** @description 玩家沿路径移动的逻辑
    * @param x 地图上点击的坐标
    * @param y 地图上点击的坐标
@@ -61,7 +115,7 @@ export class AnimalChicken extends Container {
       //上一次方向
       let lastDirection: ReturnType<typeof _getMovementDirectionWithDiagonals>;
 
-      const pixel = AnimalChicken.getMovePixel();
+      const pixel = PlayerUI.getMovePixel();
 
       this.pathfindingMove = () => {
         if (pathIndex < this.path.length) {
@@ -81,20 +135,6 @@ export class AnimalChicken extends Container {
           const dx = targetX - this.x;
           const dy = targetY - this.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
-
-          const direction = _getVerticalHorizontalDirection(this.x, this.y, targetX, targetY);
-          const directions: any = {
-            down: 0,
-            left: 1,
-            right: 2,
-            up: 3,
-          };
-
-          if (lastDirection !== direction) {
-            lastDirection = direction;
-            const animate = this.animations[directions[direction]];
-            this.animate.toggleTexture(animate);
-          }
 
           //到达路径点后，移动到下一个路径点
           if (distance < 1) {
@@ -147,6 +187,6 @@ export class AnimalChicken extends Container {
 
   /** @description 获取每1毫秒移动的像素 */
   static getMovePixel() {
-    return (AnimalChicken.SPEED / 10) * 2;
+    return (PlayerUI.SPEED / 10) * 2;
   }
 }

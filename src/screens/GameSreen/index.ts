@@ -6,13 +6,13 @@ import { JoystickUI } from "./ui/JoystickUI";
 import { MapUI } from "./ui/MapUI";
 import { FindWayMapUI } from "./ui/FindWayMapUI";
 import { EntityMapUI } from "./ui/EntityMapUI";
-import { PlayerUI } from "./ui/PlayerUI";
 
 import { LibContainerSize } from "@/ui/other/LibContainerSize";
 import { _overflowHidden, _resolveCollision, _setEvent, _trigger100Times } from "@/utils/pixiTool";
 import { LibText } from "@/ui/other/LibText";
 import { playerStore } from "@/store/player";
 import { mapStore } from "@/store/map";
+import { PlayerUI } from "@/entities/animals/Player";
 
 /** @description 游戏世界 */
 export class GameSreen extends LibContainerSize {
@@ -130,13 +130,6 @@ export class GameSreen extends LibContainerSize {
 
     //摄像头跟随玩家移动
     _trigger100Times(() => {
-      //键盘移动玩家
-      const px = PlayerUI.getPlayerMovePixel();
-      if (this.playerMoveDirection.left) this.player.x -= px;
-      if (this.playerMoveDirection.right) this.player.x += px;
-      if (this.playerMoveDirection.up) this.player.y -= px;
-      if (this.playerMoveDirection.down) this.player.y += px;
-
       //玩家、实体、地图碰撞处理
       this.handlePlayerCollision();
       this.handlePlayerMapCollision();
@@ -146,8 +139,8 @@ export class GameSreen extends LibContainerSize {
       const { x: playerCoordX, y: playerCoordy } = MapUI.posToCoord(
         this.player.x,
         this.player.y,
-        PlayerUI.SIZE.width,
-        PlayerUI.SIZE.height,
+        this.player.width,
+        this.player.height,
       );
       this.positionText.setPlayerPosition(playerCoordX, playerCoordy);
 
@@ -197,18 +190,19 @@ export class GameSreen extends LibContainerSize {
     window.addEventListener("keydown", (e) => {
       if (Object.keys(keys).includes(e.code)) {
         this.findWayMap.killPathfindingMove();
+        this.player.move(keys[e.code], true);
         this.playerMoveDirection[keys[e.code]] = true;
       }
     });
     window.addEventListener("keyup", (e) => {
       if (Object.keys(keys).includes(e.code)) {
-        this.playerMoveDirection[keys[e.code]] = false;
+        this.player.move(keys[e.code], false);
       }
     });
 
     //摇杆事件
     this.joystick.addEvent("move", (dx, dy) => {
-      const px = PlayerUI.getPlayerMovePixel();
+      const px = PlayerUI.getMovePixel();
       this.player.x += dx * px;
       this.player.y -= dy * px;
       this.findWayMap.killPathfindingMove();
@@ -271,7 +265,6 @@ export class GameSreen extends LibContainerSize {
     obstacle.y = y;
 
     this.obstacleCoord.push([x, y]);
-    console.log(this.obstacleCoord);
 
     //将这些位置标记为不可行走
     this.findWayMap.addObstacle(x, y);

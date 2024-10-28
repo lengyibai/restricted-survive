@@ -150,10 +150,10 @@ export const _getVerticalHorizontalDirection = (
     }
   } else {
     // 判断垂直方向
-    if (deltaY > 0) {
-      return "down"; // 下
-    } else {
+    if (deltaY < 0) {
       return "up"; // 上
+    } else {
+      return "down"; // 下
     }
   }
 };

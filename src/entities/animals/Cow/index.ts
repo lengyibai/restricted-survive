@@ -4,8 +4,8 @@ import { _generateFrames, _SpriteAnimate } from "@/utils/pixiTool";
 import { FindWayMapUI } from "@/screens/GameSreen/ui/FindWayMapUI";
 import { _getMovementDirectionWithDiagonals, _getVerticalHorizontalDirection } from "@/utils/tool";
 
-/** @description 鸡 */
-export class AnimalChicken extends Container {
+/** @description 牛 */
+export class AnimalCow extends Container {
   /** 速度 */
   static readonly SPEED = 10;
   /** @description 当前寻路路径 */
@@ -21,15 +21,15 @@ export class AnimalChicken extends Container {
     super();
 
     this.animations = _generateFrames({
-      texture: Assets.get("chicken"),
+      texture: Assets.get("cow"),
       width: 32,
       height: 32,
-      col: 3,
-      row: 4,
+      col: 4,
+      row: 5,
     });
 
     // 创建动画精灵
-    this.animate = new _SpriteAnimate(this.animations[2], AnimalChicken.SPEED);
+    this.animate = new _SpriteAnimate(this.animations[2], AnimalCow.SPEED);
     this.addChild(this.animate);
     this.animate.play();
 
@@ -61,7 +61,7 @@ export class AnimalChicken extends Container {
       //上一次方向
       let lastDirection: ReturnType<typeof _getMovementDirectionWithDiagonals>;
 
-      const pixel = AnimalChicken.getMovePixel();
+      const pixel = AnimalCow.getMovePixel();
 
       this.pathfindingMove = () => {
         if (pathIndex < this.path.length) {
@@ -147,6 +147,6 @@ export class AnimalChicken extends Container {
 
   /** @description 获取每1毫秒移动的像素 */
   static getMovePixel() {
-    return (AnimalChicken.SPEED / 10) * 2;
+    return (AnimalCow.SPEED / 10) * 2;
   }
 }
