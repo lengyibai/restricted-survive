@@ -3,7 +3,6 @@ import { Graphics } from "pixi.js";
 import { MapUI } from "../MapUI";
 
 import { LibContainerSize } from "@/ui/other/LibContainerSize";
-import { mapStore } from "@/store/map";
 
 /** @description 实体地图，用于放置物体的地图 */
 export class EntityMapUI extends LibContainerSize {
@@ -24,6 +23,5 @@ export class EntityMapUI extends LibContainerSize {
   addEntity(entity: Graphics) {
     this.entities.push(entity);
     this.addChild(entity);
-    mapStore.setEntities(this.entities);
   }
 }
