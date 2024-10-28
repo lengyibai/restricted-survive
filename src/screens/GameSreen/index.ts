@@ -53,13 +53,6 @@ export class GameSreen extends LibContainerSize {
   private positionText: PlayerPositionUI;
   /** 摇杆 */
   private joystick: JoystickUI;
-  /** 按下不同方向键时，控制玩家移动方向状态 */
-  private playerMoveDirection: Record<string, boolean> = {
-    left: false,
-    right: false,
-    up: false,
-    down: false,
-  };
 
   constructor() {
     super(window.innerWidth, window.innerHeight);
@@ -176,26 +169,6 @@ export class GameSreen extends LibContainerSize {
       if (e.button === 2) {
         this.player.startFindWay(pageX, pageY);
         mapStore.setCoord(coordX, coordY);
-      }
-    });
-
-    //键盘事件
-    const keys: Record<string, string> = {
-      KeyW: "up",
-      KeyA: "left",
-      KeyS: "down",
-      KeyD: "right",
-    };
-    window.addEventListener("keydown", (e) => {
-      if (Object.keys(keys).includes(e.code)) {
-        this.player.killPathfindingMove();
-        this.player.move(keys[e.code], true);
-        this.playerMoveDirection[keys[e.code]] = true;
-      }
-    });
-    window.addEventListener("keyup", (e) => {
-      if (Object.keys(keys).includes(e.code)) {
-        this.player.move(keys[e.code], false);
       }
     });
 

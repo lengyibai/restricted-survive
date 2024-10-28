@@ -16,8 +16,15 @@ export class PlayerUI extends Container {
     width: 45 * 0.83,
     height: 60 * 0.83,
   };
+  /** 按键Key与精灵动画索引映射 */
+  private DIRECTIONS: Record<string, number> = {
+    down: 0,
+    left: 1,
+    right: 3,
+    up: 2,
+  };
   /** 按下不同方向键时，控制玩家移动方向状态 */
-  private playerMoveDirection: Record<string, boolean> = {
+  private playerMoveDirection: Record<Game.DirectionFour, boolean> = {
     left: false,
     right: false,
     up: false,
@@ -63,14 +70,7 @@ export class PlayerUI extends Container {
       if (down) this.y += px;
 
       //当前方向
-      let direction = "";
-      //按键Key与精灵动画索引映射
-      const directions: Record<string, number> = {
-        down: 0,
-        left: 1,
-        right: 3,
-        up: 2,
-      };
+      let direction: Game.DirectionFour = "down";
 
       if (left && !right) {
         direction = "left";
@@ -80,16 +80,16 @@ export class PlayerUI extends Container {
         direction = "up";
       } else if (down && !up) {
         direction = "down";
-      } else {
-        direction = "down";
       }
 
+      //如果方向发生变化，则转向
       if (this.lastDirection !== direction) {
         this.lastDirection = direction;
-        const animate = this.animations[directions[direction]];
+        const animate = this.animations[this.DIRECTIONS[direction]];
         this.animate.toggleTexture(animate);
       }
 
+      //方向互斥或全方向停止时，停止动画
       if (
         (left && right) ||
         (up && down) ||
@@ -98,6 +98,25 @@ export class PlayerUI extends Container {
         this.animate.stop();
       } else {
         this.animate.play();
+      }
+    });
+
+    //键盘事件
+    const keys: Record<string, Game.DirectionFour> = {
+      KeyW: "up",
+      KeyA: "left",
+      KeyS: "down",
+      KeyD: "right",
+    };
+    window.addEventListener("keydown", (e) => {
+      if (Object.keys(keys).includes(e.code)) {
+        this.killPathfindingMove();
+        this.moveDirection(keys[e.code], true);
+      }
+    });
+    window.addEventListener("keyup", (e) => {
+      if (Object.keys(keys).includes(e.code)) {
+        this.moveDirection(keys[e.code], false);
       }
     });
   }
@@ -111,7 +130,7 @@ export class PlayerUI extends Container {
   }
 
   /** @description 控制移动方向 */
-  move(direction: string, status: boolean) {
+  moveDirection(direction: Game.DirectionFour, status: boolean) {
     this.playerMoveDirection[direction] = status;
   }
 
@@ -232,12 +251,6 @@ export class PlayerUI extends Container {
 
     return false;
   }
-
-  /** @description 移动玩家到指定坐标
-   * @param x 地图上点击的坐标
-   * @param y 地图上点击的坐标
-   */
-  // movePlayer(x: number, y: number) {}
 
   /** @description 获取玩家每1毫秒移动的像素 */
   static getMovePixel() {
