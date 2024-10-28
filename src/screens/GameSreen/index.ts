@@ -6,13 +6,13 @@ import { JoystickUI } from "./ui/JoystickUI";
 import { MapUI } from "./ui/MapUI";
 import { FindWayMapUI } from "./ui/FindWayMapUI";
 import { EntityMapUI } from "./ui/EntityMapUI";
+import { PlayerUI } from "./ui/PlayerUI";
 
 import { LibContainerSize } from "@/ui/other/LibContainerSize";
 import { _overflowHidden, _resolveCollision, _setEvent, _trigger100Times } from "@/utils/pixiTool";
 import { LibText } from "@/ui/other/LibText";
 import { playerStore } from "@/store/player";
 import { mapStore } from "@/store/map";
-import { PlayerUI } from "@/entities/animals/Player";
 
 /** @description 游戏世界 */
 export class GameSreen extends LibContainerSize {
@@ -96,7 +96,6 @@ export class GameSreen extends LibContainerSize {
     this.gameMap.addChild(this.player);
     // this.player.x = (MapUI.MAP_SIZE.width - this.player.width) / 2;
     // this.player.y = (MapUI.MAP_SIZE.height - this.player.height) / 2;
-    this.findWayMap.setTargetPoint(MapUI.MAP_SIZE.width / 2, MapUI.MAP_SIZE.height / 2);
 
     //摇杆
     this.joystick = new JoystickUI(50);
@@ -175,7 +174,7 @@ export class GameSreen extends LibContainerSize {
 
       //鼠标右键寻路
       if (e.button === 2) {
-        this.findWayMap.startFindWay(pageX, pageY);
+        this.player.startFindWay(pageX, pageY);
         mapStore.setCoord(coordX, coordY);
       }
     });
@@ -189,7 +188,7 @@ export class GameSreen extends LibContainerSize {
     };
     window.addEventListener("keydown", (e) => {
       if (Object.keys(keys).includes(e.code)) {
-        this.findWayMap.killPathfindingMove();
+        this.player.killPathfindingMove();
         this.player.move(keys[e.code], true);
         this.playerMoveDirection[keys[e.code]] = true;
       }
@@ -205,11 +204,11 @@ export class GameSreen extends LibContainerSize {
       const px = PlayerUI.getMovePixel();
       this.player.x += dx * px;
       this.player.y -= dy * px;
-      this.findWayMap.killPathfindingMove();
+      this.player.killPathfindingMove();
     });
 
     //寻路地图事件
-    this.findWayMap.setEvent("move", (x, y) => {
+    this.player.setEvent("move", (x, y) => {
       this.player.x += x;
       this.player.y += y;
     });

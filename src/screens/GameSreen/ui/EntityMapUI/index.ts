@@ -3,8 +3,6 @@ import { Graphics } from "pixi.js";
 import { MapUI } from "../MapUI";
 
 import { LibContainerSize } from "@/ui/other/LibContainerSize";
-import { AnimalChicken } from "@/entities/animals/Chicken";
-import { AnimalCow } from "@/entities/animals/Cow";
 
 /** @description 实体地图，用于放置物体的地图 */
 export class EntityMapUI extends LibContainerSize {
@@ -17,8 +15,8 @@ export class EntityMapUI extends LibContainerSize {
     // const chicken = new AnimalChicken();
     // this.addChild(chicken);
 
-    const cow = new AnimalCow();
-    this.addChild(cow);
+    // const cow = new AnimalCow();
+    // this.addChild(cow);
   }
 
   /** @description 追加障碍物 */

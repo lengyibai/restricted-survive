@@ -2,7 +2,7 @@ import { Assets, Container, Graphics, Ticker, type Resource, type Texture } from
 
 import { _generateFrames, _SpriteAnimate } from "@/utils/pixiTool";
 import { FindWayMapUI } from "@/screens/GameSreen/ui/FindWayMapUI";
-import { _getMovementDirectionWithDiagonals, _getVerticalHorizontalDirection } from "@/utils/tool";
+import { _getVHDirection } from "@/utils/tool";
 
 /** @description 牛 */
 export class AnimalCow extends Container {
@@ -34,7 +34,7 @@ export class AnimalCow extends Container {
     this.animate.play();
 
     setTimeout(() => {
-      this.startFindWay(3, 3);
+      this.startFindWay(10, 10);
     }, 1000);
   }
 
@@ -59,7 +59,7 @@ export class AnimalCow extends Container {
       //忽略第一个路径点，因为坐标已经在第一个路径点处
       let pathIndex = 1;
       //上一次方向
-      let lastDirection: ReturnType<typeof _getMovementDirectionWithDiagonals>;
+      let lastDirection: Game.DirectionFour;
 
       const pixel = AnimalCow.getMovePixel();
 
@@ -82,7 +82,7 @@ export class AnimalCow extends Container {
           const dy = targetY - this.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
 
-          const direction = _getVerticalHorizontalDirection(this.x, this.y, targetX, targetY);
+          const direction = _getVHDirection(this.x, this.y, targetX, targetY);
           const directions: any = {
             down: 0,
             left: 1,
@@ -90,11 +90,11 @@ export class AnimalCow extends Container {
             up: 3,
           };
 
-          if (lastDirection !== direction) {
-            lastDirection = direction;
-            const animate = this.animations[directions[direction]];
-            this.animate.toggleTexture(animate);
-          }
+          // if (lastDirection !== direction) {
+          //   lastDirection = direction;
+          //   const animate = this.animations[directions[direction]];
+          //   this.animate.toggleTexture(animate);
+          // }
 
           //到达路径点后，移动到下一个路径点
           if (distance < 1) {

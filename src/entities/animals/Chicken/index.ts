@@ -2,7 +2,7 @@ import { Assets, Container, Graphics, Ticker, type Resource, type Texture } from
 
 import { _generateFrames, _SpriteAnimate } from "@/utils/pixiTool";
 import { FindWayMapUI } from "@/screens/GameSreen/ui/FindWayMapUI";
-import { _getMovementDirectionWithDiagonals, _getVerticalHorizontalDirection } from "@/utils/tool";
+import { _getVHDirection } from "@/utils/tool";
 
 /** @description 鸡 */
 export class AnimalChicken extends Container {
@@ -59,7 +59,7 @@ export class AnimalChicken extends Container {
       //忽略第一个路径点，因为坐标已经在第一个路径点处
       let pathIndex = 1;
       //上一次方向
-      let lastDirection: ReturnType<typeof _getMovementDirectionWithDiagonals>;
+      let lastDirection: Game.DirectionFour;
 
       const pixel = AnimalChicken.getMovePixel();
 
@@ -82,7 +82,7 @@ export class AnimalChicken extends Container {
           const dy = targetY - this.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
 
-          const direction = _getVerticalHorizontalDirection(this.x, this.y, targetX, targetY);
+          const direction = _getVHDirection(this.x, this.y, targetX, targetY);
           const directions: any = {
             down: 0,
             left: 1,
