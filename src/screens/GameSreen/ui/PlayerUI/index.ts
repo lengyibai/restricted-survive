@@ -31,7 +31,7 @@ export class PlayerUI extends Container {
     down: false,
   };
   /** 上一次移动的方向 */
-  private lastDirection: Game.DirectionFour;
+  private lastDirection: Game.DirectionFour | "" = "";
   /** 是否处于键盘按下 */
   private isKeyDown = false;
   /** 计算得到的路径 */
@@ -85,10 +85,7 @@ export class PlayerUI extends Container {
         direction = "down";
       }
 
-      //如果方向发生变化，则转向
-      if (this.lastDirection !== direction) {
-        this.turnDirection(direction);
-      }
+      this.turnDirection(direction);
     });
 
     //键盘事件
@@ -107,8 +104,13 @@ export class PlayerUI extends Container {
     window.addEventListener("keyup", (e) => {
       if (Object.keys(keys).includes(e.code)) {
         this.moveDirection(keys[e.code], false);
-        this.isKeyDown = false;
-        this.animate.stop();
+
+        //如果没有按下任何方向键，则停止动画
+        if (Object.values(this.playerMoveDirection).every((v) => !v)) {
+          this.isKeyDown = false;
+          this.lastDirection = "";
+          this.animate.stop();
+        }
       }
     });
   }
@@ -129,6 +131,9 @@ export class PlayerUI extends Container {
 
   /** @description 设置转向 */
   turnDirection(direction: Game.DirectionFour) {
+    //如果方向发生变化，则转向
+    if (this.lastDirection === direction) return;
+
     this.lastDirection = direction;
     const animate = this.animations[this.DIRECTIONS[direction]];
     this.animate.toggleTexture(animate);
@@ -160,9 +165,7 @@ export class PlayerUI extends Container {
     }
 
     //如果方向发生变化，则转向
-    if (this.lastDirection !== direction) {
-      this.turnDirection(direction);
-    }
+    this.turnDirection(direction);
 
     //如果没有按下摇杆，则停止动画
     if (dx === 0 && dy === 0) {
@@ -193,7 +196,9 @@ export class PlayerUI extends Container {
     this.path = FindWayMapUI.calculatePath(playerGridCoord, targetGridCoord);
     try {
       this.path = PF.Util.smoothenPath(mapStore.grid, this.path);
-    } catch (error) {}
+    } catch (error) {
+      this.path = PF.Util.compressPath(this.path);
+    }
     this.moveGridPlayer(x, y);
   }
 
@@ -246,17 +251,43 @@ export class PlayerUI extends Container {
         if (distance < 1) {
           pathIndex++;
         } else {
-          const x = (dx / distance) * pixel;
-          const y = (dy / distance) * pixel;
-          this.playerMove && this.playerMove(x, y);
+          const moveX = (dx / distance) * pixel;
+          const moveY = (dy / distance) * pixel;
+          this.playerMove && this.playerMove(moveX, moveY);
+
+          // 计算玩家朝向
+          const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+          this.updatePlayerDirection(angle);
         }
       } else {
         this.killPathfindingMove();
+        this.lastDirection = "";
+        this.animate.stop();
       }
     };
 
-    //当路径寻路完成后，将精灵的位置更新为目标位置，避免下一次寻路时先到达中间
     Ticker.shared.add(this.pathfindingMove);
+  }
+
+  /** @description 通过传入的角度计算玩家朝向
+   * @param angle 角度
+   */
+  private updatePlayerDirection(angle: number) {
+    console.log(angle);
+
+    let direction: Game.DirectionFour = "down";
+
+    if (angle >= -45 && angle < 45) {
+      direction = "right";
+    } else if (angle >= 45 && angle < 135) {
+      direction = "down";
+    } else if (angle >= 135 || angle < -135) {
+      direction = "left";
+    } else {
+      direction = "up";
+    }
+
+    this.turnDirection(direction);
   }
 
   /**
