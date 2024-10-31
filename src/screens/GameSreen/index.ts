@@ -174,12 +174,6 @@ export class GameSreen extends LibContainerSize {
 
     //摇杆事件
     this.joystick.addEvent("move", this.player.joystickMove.bind(this.player));
-
-    //寻路地图事件
-    this.player.setEvent("move", (x, y) => {
-      this.player.x += x;
-      this.player.y += y;
-    });
   }
 
   /** @description 处理玩家与障碍物的碰撞 */
