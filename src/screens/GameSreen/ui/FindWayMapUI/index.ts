@@ -6,6 +6,7 @@ import { MapUI } from "../MapUI";
 import { _decimal } from "@/utils/tool";
 import { LibContainerSize } from "@/ui/other/LibContainerSize";
 import { mapStore } from "@/store/map";
+import { _getMapPosToGridCoord } from "@/utils/private";
 
 /** @description 寻路地图 */
 export class FindWayMapUI extends LibContainerSize {
@@ -44,7 +45,7 @@ export class FindWayMapUI extends LibContainerSize {
 
   /** @description 设置寻路障碍物 */
   addObstacle(x: number, y: number) {
-    const { x: gridX, y: gridY } = FindWayMapUI.getMapPosToGridCoord(x, y);
+    const { x: gridX, y: gridY } = _getMapPosToGridCoord(x, y);
     mapStore.grid.setWalkableAt(gridX, gridY, false);
   }
 
@@ -70,19 +71,6 @@ export class FindWayMapUI extends LibContainerSize {
     }
 
     this.addChild(gridGraphics);
-  }
-
-  /**
-   * @description 将坐标转换为单元格行列坐标
-   * @param pixelX - 玩家在地图上的 X 坐标（以像素为单位）
-   * @param pixelY - 玩家在地图上的 Y 坐标（以像素为单位）
-   * @param cellSize - 每个格子的像素大小
-   * @returns 返回网格坐标 { gridX, gridY }
-   */
-  static getMapPosToGridCoord(pixelX: number, pixelY: number) {
-    const x = Math.floor(pixelX / FindWayMapUI.CELL_SIZE);
-    const y = Math.floor(pixelY / FindWayMapUI.CELL_SIZE);
-    return { x, y };
   }
 
   /** @description 将单元格行列坐标转位地图坐标 */

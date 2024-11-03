@@ -5,6 +5,7 @@
 import { Container, Graphics, Ticker, type Resource, type Texture } from "pixi.js";
 
 import type { _SpriteAnimate } from "./pixiTool";
+import { _getMapPosToGridCoord } from "./private";
 
 import { FindWayMapUI } from "@/screens/GameSreen/ui/FindWayMapUI";
 import { mapStore } from "@/store/map";
@@ -41,13 +42,21 @@ export abstract class AutoFindPath extends Container {
    * @param pageX 鼠标点击的屏幕坐标
    * @param pageY 鼠标点击的屏幕坐标
    */
-  startFindWay(pageX: number, pageY: number) {
+  async startFindWay(pageX: number, pageY: number, type: "map" | "screen" = "screen") {
     //屏幕坐标转地图坐标
-    let x = Math.abs(mapStore.x) + pageX;
-    let y = Math.abs(mapStore.y) + pageY;
+    let x = 0;
+    let y = 0;
 
-    const moverGridCoord = FindWayMapUI.getMapPosToGridCoord(this.x, this.y);
-    const targetGridCoord = FindWayMapUI.getMapPosToGridCoord(x, y);
+    if (type === "map") {
+      x = pageX;
+      y = pageY;
+    } else {
+      x = Math.abs(mapStore.x) + pageX;
+      y = Math.abs(mapStore.y) + pageY;
+    }
+
+    const moverGridCoord = _getMapPosToGridCoord(this.x, this.y);
+    const targetGridCoord = _getMapPosToGridCoord(x, y);
 
     //检查目标点周围的格子是否有障碍物，如果有障碍物，将目标点调整为其中心点
     if (this.hasObstacleAround(targetGridCoord.x, targetGridCoord.y)) {
@@ -60,12 +69,10 @@ export abstract class AutoFindPath extends Container {
     }
 
     //计算从玩家到目标的路径
-    console.log(moverGridCoord, targetGridCoord);
-
     this.path = FindWayMapUI.calculatePath(moverGridCoord, targetGridCoord);
     this.killPathfindingMove();
     this.drawPath(this.path, x, y);
-    this.startMove(x, y);
+    await this.startMove(x, y);
   }
 
   /** @description 中断自动寻路移动 */
@@ -84,52 +91,55 @@ export abstract class AutoFindPath extends Container {
    * @param x 地图上点击的坐标
    * @param y 地图上点击的坐标
    */
-  private startMove(x: number, y: number) {
-    //忽略第一个路径点，因为玩家坐标已经在第一个路径点处
-    let pathIndex = 1;
+  startMove(x: number, y: number) {
+    return new Promise<void>((resolve) => {
+      //忽略第一个路径点，因为玩家坐标已经在第一个路径点处
+      let pathIndex = 1;
 
-    const pixel = this.getMovePixel();
+      const pixel = this.getMovePixel();
 
-    this.pathfindingMove = () => {
-      if (pathIndex < this.path.length) {
-        //获取下一个路径点目标点
-        const nextPoint = this.path[pathIndex];
+      this.pathfindingMove = () => {
+        if (pathIndex < this.path.length) {
+          //获取下一个路径点目标点
+          const nextPoint = this.path[pathIndex];
 
-        let targetX = nextPoint[0] * FindWayMapUI.CELL_SIZE;
-        let targetY = nextPoint[1] * FindWayMapUI.CELL_SIZE;
+          let targetX = nextPoint[0] * FindWayMapUI.CELL_SIZE;
+          let targetY = nextPoint[1] * FindWayMapUI.CELL_SIZE;
 
-        //由于寻路结束会停留在单元格中心点，所以需要将最后一个路径终点设置为实际终点
-        if (pathIndex === this.path.length - 1) {
-          targetX = x - this.size.width / 2;
-          targetY = y - this.size.height / 2;
-        }
+          //由于寻路结束会停留在单元格中心点，所以需要将最后一个路径终点设置为实际终点
+          if (pathIndex === this.path.length - 1) {
+            targetX = x - this.size.width / 2;
+            targetY = y - this.size.height / 2;
+          }
 
-        //计算当前路径点与玩家的直线距离
-        const dx = targetX - this.x;
-        const dy = targetY - this.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
+          //计算当前路径点与玩家的直线距离
+          const dx = targetX - this.x;
+          const dy = targetY - this.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
 
-        //到达路径点后，移动到下一个路径点
-        if (distance <= 2) {
-          pathIndex++;
+          //到达路径点后，移动到下一个路径点
+          if (distance <= 2) {
+            pathIndex++;
+          } else {
+            const moveX = (dx / distance) * pixel;
+            const moveY = (dy / distance) * pixel;
+
+            this.x += moveX;
+            this.y += moveY;
+
+            // 计算玩家朝向
+            const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+            this.updatePlayerDirection(angle);
+          }
         } else {
-          const moveX = (dx / distance) * pixel;
-          const moveY = (dy / distance) * pixel;
-
-          this.x += moveX;
-          this.y += moveY;
-
-          // 计算玩家朝向
-          const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-          this.updatePlayerDirection(angle);
+          this.killPathfindingMove();
+          this.resetDirection();
+          resolve();
         }
-      } else {
-        this.killPathfindingMove();
-        this.resetDirection();
-      }
-    };
+      };
 
-    Ticker.shared.add(this.pathfindingMove);
+      Ticker.shared.add(this.pathfindingMove);
+    });
   }
 
   /** @description 通过传入的角度计算玩家朝向
@@ -179,7 +189,7 @@ export abstract class AutoFindPath extends Container {
    * @description 检查目标点周围是否有障碍物
    * @param targetCoord - 目标单元格行列
    */
-  private hasObstacleAround(x: number, y: number) {
+  private hasObstacleAround(coordX: number, coordY: number) {
     const directions = [
       { x: 0, y: 1 }, //下
       { x: 0, y: -1 }, //上
@@ -192,8 +202,8 @@ export abstract class AutoFindPath extends Container {
     ];
 
     for (const dir of directions) {
-      const neighborX = x + dir.x;
-      const neighborY = y + dir.y;
+      const neighborX = coordX + dir.x;
+      const neighborY = coordY + dir.y;
 
       //确保邻近格子在有效范围内
       if (!mapStore.grid.isWalkableAt(neighborX, neighborY)) {

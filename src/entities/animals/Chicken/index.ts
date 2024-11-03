@@ -1,7 +1,11 @@
 import { Assets, type Resource, type Texture } from "pixi.js";
 
+import { FindWayMapUI } from "../../../screens/GameSreen/ui/FindWayMapUI/index";
+
 import { _generateFrames, _SpriteAnimate } from "@/utils/pixiTool";
 import { AutoFindPath } from "@/utils/baseClass";
+import { mapStore } from "@/store/map";
+import { _getMapPosToGridCoord } from "@/utils/private";
 
 /** @description 鸡 */
 export class AnimalChicken extends AutoFindPath {
@@ -15,7 +19,7 @@ export class AnimalChicken extends AutoFindPath {
     height: 32,
   };
 
-  /** 按键Key与精灵动画索引映射 */
+  /** 精灵动画索引映射 */
   private DIRECTIONS: Record<string, number> = {
     down: 0,
     left: 1,
@@ -37,10 +41,6 @@ export class AnimalChicken extends AutoFindPath {
     // 创建动画精灵
     this.animate = new _SpriteAnimate(this.animations[0], this.speed);
     this.addChild(this.animate);
-
-    setTimeout(() => {
-      // this.startFindWay(700, 300);
-    }, 1000);
   }
 
   protected turnDirection(direction: Game.DirectionFour) {

@@ -2,10 +2,12 @@ import { Assets, type Resource, type Texture } from "pixi.js";
 
 import { _generateFrames, _SpriteAnimate, _trigger100Times } from "@/utils/pixiTool";
 import { AutoFindPath } from "@/utils/baseClass";
+import { mapStore } from "@/store/map";
+import { _getMapPosToGridCoord } from "@/utils/private";
 
 /** @description 玩家 */
 export class PlayerUI extends AutoFindPath {
-  protected speed = 10;
+  protected speed = 20;
   protected animate: _SpriteAnimate;
   protected animations: Texture<Resource>[][];
   protected lastDirection: Game.DirectionFour | null = null;
@@ -102,7 +104,16 @@ export class PlayerUI extends AutoFindPath {
     });
 
     setTimeout(() => {
-      this.startFindWay(700, 300);
+      const fn = () => {
+        const position = mapStore.getRandomWalkableGrid({ x: this.x, y: this.x });
+        if (position) {
+          const { x, y } = position;
+          this.startFindWay(x, y, "map").then(() => {
+            fn();
+          });
+        }
+      };
+      fn();
     }, 1000);
   }
 

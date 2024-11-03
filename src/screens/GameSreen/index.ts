@@ -13,6 +13,7 @@ import { _overflowHidden, _resolveCollision, _setEvent, _trigger100Times } from 
 import { LibText } from "@/ui/other/LibText";
 import { playerStore } from "@/store/player";
 import { mapStore } from "@/store/map";
+import { _getMapPosToGridCoord } from "@/utils/private";
 
 /** @description 游戏世界 */
 export class GameSreen extends LibContainerSize {
@@ -140,9 +141,9 @@ export class GameSreen extends LibContainerSize {
       mapStore.setPosition(this.gameMap.x, this.gameMap.y);
     });
 
-    this.obstacleCoord.forEach((coord) => {
-      this.createObstacle(coord[0], coord[1]);
-    });
+    // this.obstacleCoord.forEach((coord) => {
+    //   this.createObstacle(coord[0], coord[1]);
+    // });
   }
 
   /** @description 设置玩家移动相关事件 */
@@ -161,7 +162,7 @@ export class GameSreen extends LibContainerSize {
       //鼠标左键放置障碍物
       if (e.button === 0) {
         //将障碍物修正到单元格中
-        const { x: gridX, y: gridY } = FindWayMapUI.getMapPosToGridCoord(posX, posY);
+        const { x: gridX, y: gridY } = _getMapPosToGridCoord(posX, posY);
         this.createObstacle(gridX * FindWayMapUI.CELL_SIZE, gridY * FindWayMapUI.CELL_SIZE);
       }
 
