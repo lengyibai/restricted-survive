@@ -110,7 +110,7 @@ export abstract class AutoFindPath extends Container {
         const distance = Math.sqrt(dx * dx + dy * dy);
 
         //到达路径点后，移动到下一个路径点
-        if (distance < 1) {
+        if (distance <= 2) {
           pathIndex++;
         } else {
           const moveX = (dx / distance) * pixel;
