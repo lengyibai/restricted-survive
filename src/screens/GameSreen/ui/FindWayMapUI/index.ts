@@ -11,14 +11,14 @@ import { _getMapPosToGridCoord } from "@/utils/private";
 /** @description 寻路地图 */
 export class FindWayMapUI extends LibContainerSize {
   /** 单元格的像素大小 */
-  static readonly CELL_SIZE = 50;
+  static readonly CELL_SIZE = 30;
   /** 网格行列数 */
-  private gridSize = 20;
+  private gridSize = 1;
   /** 目标点 */
   private targetPoint: LibContainerSize;
 
   constructor() {
-    super(MapUI.MAP_SIZE.width, MapUI.MAP_SIZE.height);
+    super(MapUI.MAP_SIZE, MapUI.MAP_SIZE);
 
     //创建寻路实例
     mapStore.setFinder(
@@ -30,7 +30,7 @@ export class FindWayMapUI extends LibContainerSize {
     );
 
     //网格行列数
-    this.gridSize = _decimal(MapUI.MAP_SIZE.width, FindWayMapUI.CELL_SIZE, "/");
+    this.gridSize = _decimal(MapUI.MAP_SIZE, FindWayMapUI.CELL_SIZE, "/");
 
     //创建网格
     mapStore.setGrid(new PF.Grid(this.gridSize, this.gridSize));

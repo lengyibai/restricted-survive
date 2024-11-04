@@ -62,16 +62,9 @@ export class GameSreen extends LibContainerSize {
     //地图
     this.gameMap = new MapUI();
     this.addChild(this.gameMap);
-    // this.gameMap.x = -MapUI.MAP_SIZE.width / 2 + window.innerWidth / 2;
-    // this.gameMap.y = -MapUI.MAP_SIZE.height / 2 + window.innerHeight / 2;
-    mapStore.setPosition(this.gameMap.x, this.gameMap.y);
 
     //草地
-    const grass = new TilingSprite(
-      Assets.get("grass"),
-      MapUI.MAP_SIZE.width,
-      MapUI.MAP_SIZE.height,
-    );
+    const grass = new TilingSprite(Assets.get("grass"), MapUI.MAP_SIZE, MapUI.MAP_SIZE);
     this.gameMap.addChild(grass);
     grass.tileScale.x = 0.5;
     grass.tileScale.y = 0.5;
@@ -88,8 +81,8 @@ export class GameSreen extends LibContainerSize {
     //玩家
     this.player = new PlayerUI();
     this.gameMap.addChild(this.player);
-    // this.player.x = (MapUI.MAP_SIZE.width - this.player.width) / 2;
-    // this.player.y = (MapUI.MAP_SIZE.height - this.player.height) / 2;
+    this.player.x = (MapUI.MAP_SIZE - this.player.width) / 2;
+    this.player.y = (MapUI.MAP_SIZE - this.player.height) / 2;
 
     //摇杆
     this.joystick = new JoystickUI(50);
@@ -189,9 +182,9 @@ export class GameSreen extends LibContainerSize {
   /** @description 处理玩家与地图边界的碰撞 */
   private handlePlayerMapCollision() {
     this.player.x = Math.max(0, this.player.x);
-    this.player.x = Math.min(MapUI.MAP_SIZE.width - this.player.width, this.player.x);
+    this.player.x = Math.min(MapUI.MAP_SIZE - this.player.width, this.player.x);
     this.player.y = Math.max(0, this.player.y);
-    this.player.y = Math.min(MapUI.MAP_SIZE.height - this.player.height, this.player.y);
+    this.player.y = Math.min(MapUI.MAP_SIZE - this.player.height, this.player.y);
   }
 
   /** @description 处理地图边界与屏幕边界的碰撞 */
@@ -202,9 +195,9 @@ export class GameSreen extends LibContainerSize {
 
     //限制地图移动范围
     x = Math.min(x, 0);
-    x = Math.max(x, -MapUI.MAP_SIZE.width + window.innerWidth);
+    x = Math.max(x, -MapUI.MAP_SIZE + window.innerWidth);
     y = Math.min(y, 0);
-    y = Math.max(y, -MapUI.MAP_SIZE.height + window.innerHeight);
+    y = Math.max(y, -MapUI.MAP_SIZE + window.innerHeight);
 
     gsap.killTweensOf(this.gameMap);
     gsap.to(this.gameMap, {

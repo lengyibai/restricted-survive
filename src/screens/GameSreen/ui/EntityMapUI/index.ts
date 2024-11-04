@@ -11,7 +11,7 @@ export class EntityMapUI extends LibContainerSize {
   entities: Graphics[] = [];
 
   constructor() {
-    super(MapUI.MAP_SIZE.width, MapUI.MAP_SIZE.height);
+    super(MapUI.MAP_SIZE, MapUI.MAP_SIZE);
 
     const chicken = new AnimalChicken();
     this.addChild(chicken);

@@ -3,7 +3,6 @@ import { Assets, type Resource, type Texture } from "pixi.js";
 import { _generateFrames, _SpriteAnimate, _trigger100Times } from "@/utils/pixiTool";
 import { AutoFindPath } from "@/utils/baseClass";
 import { mapStore } from "@/store/map";
-import { _getMapPosToGridCoord } from "@/utils/private";
 
 /** @description 玩家 */
 export class PlayerUI extends AutoFindPath {
@@ -13,8 +12,8 @@ export class PlayerUI extends AutoFindPath {
   protected lastDirection: Game.DirectionFour | null = null;
   protected onMove?: (x: number, y: number) => void;
   protected size = {
-    width: 45 * 0.83,
-    height: 60 * 0.83,
+    width: 45 * 0.5,
+    height: 60 * 0.5,
   };
 
   /** 按键Key与精灵动画索引映射 */
@@ -48,7 +47,9 @@ export class PlayerUI extends AutoFindPath {
 
     // 动画精灵
     this.animate = new _SpriteAnimate(this.animations[0], this.speed);
-    this.animate.scale.set(0.83);
+    this.animate.width = this.size.width;
+    this.animate.height = this.size.height;
+    this.animate.anchor.set(-0.15, 0);
     this.addChild(this.animate);
 
     //按键实时响应

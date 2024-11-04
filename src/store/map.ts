@@ -52,13 +52,15 @@ class MapStore {
    * @param position 移动者当前坐标
    */
   getRandomWalkableGrid(position: { x: number; y: number }) {
-    const radius = 10;
+    const radius = 30;
     const { x, y } = position;
     const { x: gridX, y: gridY } = _getMapPosToGridCoord(x, y);
     const gridWidth = this.grid.width;
     const gridHeight = this.grid.height;
+    console.log(this.grid);
+
     let attempts = 0;
-    const maxAttempts = 100;
+    const maxAttempts = 900;
 
     while (attempts < maxAttempts) {
       // 随机生成目标格子坐标
@@ -74,8 +76,8 @@ class MapStore {
         this.grid.isWalkableAt(targetX, targetY) &&
         FindWayMapUI.calculatePath({ x: gridX, y: gridY }, { x: targetX, y: targetY })
       ) {
-        const x = targetX * FindWayMapUI.CELL_SIZE;
-        const y = targetY * FindWayMapUI.CELL_SIZE;
+        const x = (targetX + 0.5) * FindWayMapUI.CELL_SIZE;
+        const y = (targetY + 0.5) * FindWayMapUI.CELL_SIZE;
         console.log(targetX, targetY);
 
         return { x, y };
