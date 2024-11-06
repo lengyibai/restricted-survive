@@ -1,15 +1,12 @@
 import { Assets, type Resource, type Texture } from "pixi.js";
 
-import { FindWayMapUI } from "../../../screens/GameSreen/ui/FindWayMapUI/index";
-
 import { _generateFrames, _SpriteAnimate } from "@/utils/pixiTool";
 import { AutoFindPath } from "@/utils/baseClass";
 import { mapStore } from "@/store/map";
-import { _getMapPosToGridCoord } from "@/utils/private";
 
 /** @description 鸡 */
 export class AnimalChicken extends AutoFindPath {
-  protected speed = 10;
+  protected speed = 20;
   protected animate: _SpriteAnimate;
   protected animations: Texture<Resource>[][];
   protected lastDirection: Game.DirectionFour | null = null;
@@ -41,6 +38,20 @@ export class AnimalChicken extends AutoFindPath {
     // 创建动画精灵
     this.animate = new _SpriteAnimate(this.animations[0], this.speed);
     this.addChild(this.animate);
+
+    setTimeout(() => {
+      const fn = () => {
+        const { x, y } = this.getCenterPoint();
+        const position = mapStore.getRandomWalkableGrid({ x, y });
+        if (position) {
+          const { x, y } = position;
+          this.startFindWay(x, y, "map").then(() => {
+            fn();
+          });
+        }
+      };
+      fn();
+    }, 1000);
   }
 
   protected turnDirection(direction: Game.DirectionFour) {

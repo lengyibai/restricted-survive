@@ -95,14 +95,6 @@ export class GameSreen extends LibContainerSize {
     this.addChild(this.positionText);
     this.positionText.y = window.innerHeight - this.positionText.height;
 
-    const tip = new LibText({
-      text: "电脑：左键放置障碍物，右键自动移动到目标点，WASD和滑杆控制移动。\n手机：点击放置障碍物，滑杆控制移动。",
-      fontSize: 16,
-      wordWrap: true,
-      wordWrapWidth: window.innerWidth * 0.5,
-    });
-    this.addChild(tip);
-
     const author = new LibText({
       text: "by 冷弋白",
       fontSize: 16,

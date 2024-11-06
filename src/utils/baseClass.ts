@@ -55,7 +55,8 @@ export abstract class AutoFindPath extends Container {
       y = Math.abs(mapStore.y) + pageY;
     }
 
-    const moverGridCoord = _getMapPosToGridCoord(this.x, this.y);
+    const { x: centerX, y: centerY } = this.getCenterPoint();
+    const moverGridCoord = _getMapPosToGridCoord(centerX, centerY);
     const targetGridCoord = _getMapPosToGridCoord(x, y);
 
     //检查目标点周围的格子是否有障碍物，如果有障碍物，将目标点调整为其中心点
@@ -71,7 +72,7 @@ export abstract class AutoFindPath extends Container {
     //计算从玩家到目标的路径
     this.path = FindWayMapUI.calculatePath(moverGridCoord, targetGridCoord);
     this.killPathfindingMove();
-    this.drawPath(this.path, x, y);
+    // this.drawPath(this.path, x, y);
     await this.startMove(x, y);
   }
 
@@ -175,7 +176,8 @@ export abstract class AutoFindPath extends Container {
 
         //路径起点为当前玩家坐标
         if (i === 0) {
-          this.pathGraphics.moveTo(this.x + this.size.width / 2, this.y + this.size.height / 2);
+          const { x: centerX, y: centerY } = this.getCenterPoint();
+          this.pathGraphics.moveTo(centerX, centerY);
         } else if (i === path.length - 1) {
           this.pathGraphics.lineTo(targetX, targetY);
         } else {
@@ -212,6 +214,14 @@ export abstract class AutoFindPath extends Container {
     }
 
     return false;
+  }
+
+  /** @description 获取移动者中心点坐标 */
+  protected getCenterPoint() {
+    return {
+      x: this.x + this.size.width / 2,
+      y: this.y + this.size.height / 2,
+    };
   }
 
   /** @description 设置转向 */

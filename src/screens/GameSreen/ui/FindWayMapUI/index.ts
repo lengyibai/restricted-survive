@@ -80,11 +80,12 @@ export class FindWayMapUI extends LibContainerSize {
     return { x, y };
   }
 
-  /** @description 计算从起点到终点的路径 */
+  /** @description 计算从起点到终点的路径，传递网格坐标 */
   static calculatePath(start: { x: number; y: number }, end: { x: number; y: number }): number[][] {
     //获取起点和终点的节点
     const startNode = mapStore.grid.getNodeAt(start.x, start.y);
     const endNode = mapStore.grid.getNodeAt(end.x, end.y);
+
     //使用 A* 算法计算路径
     return mapStore.finder.findPath(
       startNode.x,

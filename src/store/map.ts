@@ -2,6 +2,7 @@ import PF from "pathfinding";
 
 import { FindWayMapUI } from "@/screens/GameSreen/ui/FindWayMapUI";
 import { _getMapPosToGridCoord } from "@/utils/private";
+import { _random } from "@/utils/tool";
 
 class MapStore {
   /** 地图X坐标 */
@@ -52,39 +53,50 @@ class MapStore {
    * @param position 移动者当前坐标
    */
   getRandomWalkableGrid(position: { x: number; y: number }) {
-    const radius = 30;
-    const { x, y } = position;
-    const { x: gridX, y: gridY } = _getMapPosToGridCoord(x, y);
-    const gridWidth = this.grid.width;
-    const gridHeight = this.grid.height;
-    console.log(this.grid);
+    const RADIUS = 5;
 
-    let attempts = 0;
-    const maxAttempts = 900;
+    //获取移动者所在格子坐标
+    const { x: gridX, y: gridY } = _getMapPosToGridCoord(position.x, position.y);
+    const data = this.getNearbyGrids(gridX, gridY, RADIUS);
 
-    while (attempts < maxAttempts) {
-      // 随机生成目标格子坐标
-      const targetX = gridX + Math.floor(Math.random() * (2 * radius + 1)) - radius;
-      const targetY = gridY + Math.floor(Math.random() * (2 * radius + 1)) - radius;
+    if (data.length === 0) return;
 
-      // 确保目标格子在有效范围内
-      if (
-        targetX >= 0 &&
-        targetX <= gridWidth &&
-        targetY >= 0 &&
-        targetY <= gridHeight &&
-        this.grid.isWalkableAt(targetX, targetY) &&
-        FindWayMapUI.calculatePath({ x: gridX, y: gridY }, { x: targetX, y: targetY })
-      ) {
-        const x = (targetX + 0.5) * FindWayMapUI.CELL_SIZE;
-        const y = (targetY + 0.5) * FindWayMapUI.CELL_SIZE;
-        console.log(targetX, targetY);
+    const index = _random(0, data.length - 1);
+    const { x: targetX, y: targetY } = data[index];
+    const x = (targetX + 0.5) * FindWayMapUI.CELL_SIZE;
+    const y = (targetY + 0.5) * FindWayMapUI.CELL_SIZE;
 
-        return { x, y };
+    return { x, y };
+  }
+
+  /** @description 获取以当前移动者网格坐标为中心，半径范围内的有效网格坐标
+   * @param position 移动者当前坐标
+   * @param radius 半径范围
+   * @returns 返回一个包含网格坐标的数组
+   */
+  getNearbyGrids(gridX: number, gridY: number, radius: number) {
+    // 存储结果的数组
+    let nearbyGrids: { x: number; y: number }[] = [];
+
+    for (let i = 0; i < radius * 2; i++) {
+      for (let j = 0; j < radius * 2; j++) {
+        nearbyGrids.push({ x: gridX - radius + i, y: gridY - radius + j });
       }
-      attempts++;
     }
-    return;
+
+    // 过滤掉不在有效范围内的格子
+    nearbyGrids = nearbyGrids.filter((grid) => {
+      return (
+        grid.x >= 0 &&
+        grid.x <= this.grid.width &&
+        grid.y >= 0 &&
+        grid.y <= this.grid.height &&
+        this.grid.isWalkableAt(grid.x, grid.y) &&
+        FindWayMapUI.calculatePath({ x: gridX, y: gridY }, { x: grid.x, y: grid.y })
+      );
+    });
+
+    return nearbyGrids;
   }
 }
 

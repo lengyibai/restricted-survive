@@ -2,7 +2,6 @@ import { Assets, type Resource, type Texture } from "pixi.js";
 
 import { _generateFrames, _SpriteAnimate, _trigger100Times } from "@/utils/pixiTool";
 import { AutoFindPath } from "@/utils/baseClass";
-import { mapStore } from "@/store/map";
 
 /** @description 玩家 */
 export class PlayerUI extends AutoFindPath {
@@ -103,19 +102,6 @@ export class PlayerUI extends AutoFindPath {
         }
       }
     });
-
-    setTimeout(() => {
-      const fn = () => {
-        const position = mapStore.getRandomWalkableGrid({ x: this.x, y: this.x });
-        if (position) {
-          const { x, y } = position;
-          this.startFindWay(x, y, "map").then(() => {
-            fn();
-          });
-        }
-      };
-      fn();
-    }, 1000);
   }
 
   /** @description 摇杆事件 */

@@ -13,11 +13,10 @@ export class EntityMapUI extends LibContainerSize {
   constructor() {
     super(MapUI.MAP_SIZE, MapUI.MAP_SIZE);
 
-    const chicken = new AnimalChicken();
-    this.addChild(chicken);
-
-    // const cow = new AnimalCow();
-    // this.addChild(cow);
+    for (let i = 0; i < 1000; i++) {
+      const chicken = new AnimalChicken();
+      this.addChild(chicken);
+    }
   }
 
   /** @description 追加障碍物 */
