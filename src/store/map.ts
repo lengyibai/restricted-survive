@@ -53,7 +53,7 @@ class MapStore {
    * @param position 移动者当前坐标
    */
   getRandomWalkableGrid(position: { x: number; y: number }) {
-    const RADIUS = 5;
+    const RADIUS = 10;
 
     //获取移动者所在格子坐标
     const { x: gridX, y: gridY } = _getMapPosToGridCoord(position.x, position.y);
@@ -76,25 +76,23 @@ class MapStore {
    */
   getNearbyGrids(gridX: number, gridY: number, radius: number) {
     // 存储结果的数组
-    let nearbyGrids: { x: number; y: number }[] = [];
+    const nearbyGrids: { x: number; y: number }[] = [];
 
     for (let i = 0; i < radius * 2; i++) {
       for (let j = 0; j < radius * 2; j++) {
-        nearbyGrids.push({ x: gridX - radius + i, y: gridY - radius + j });
+        const x = gridX - radius + i;
+        const y = gridY - radius + j;
+
+        if (
+          x >= 0 &&
+          x <= this.grid.width &&
+          y >= 0 &&
+          y <= this.grid.height &&
+          this.grid.isWalkableAt(x, y)
+        )
+          nearbyGrids.push({ x, y });
       }
     }
-
-    // 过滤掉不在有效范围内的格子
-    nearbyGrids = nearbyGrids.filter((grid) => {
-      return (
-        grid.x >= 0 &&
-        grid.x <= this.grid.width &&
-        grid.y >= 0 &&
-        grid.y <= this.grid.height &&
-        this.grid.isWalkableAt(grid.x, grid.y) &&
-        FindWayMapUI.calculatePath({ x: gridX, y: gridY }, { x: grid.x, y: grid.y })
-      );
-    });
 
     return nearbyGrids;
   }

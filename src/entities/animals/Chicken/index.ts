@@ -24,6 +24,9 @@ export class AnimalChicken extends AutoFindPath {
     up: 3,
   };
 
+  /** 是否处于追逐玩家 */
+  private isChasing = false;
+
   constructor() {
     super();
 
@@ -39,19 +42,46 @@ export class AnimalChicken extends AutoFindPath {
     this.animate = new _SpriteAnimate(this.animations[0], this.speed);
     this.addChild(this.animate);
 
-    setTimeout(() => {
-      const fn = () => {
-        const { x, y } = this.getCenterPoint();
-        const position = mapStore.getRandomWalkableGrid({ x, y });
-        if (position) {
-          const { x, y } = position;
-          this.startFindWay(x, y, "map").then(() => {
-            fn();
-          });
-        }
-      };
-      fn();
-    }, 1000);
+    const fn = () => {
+      const { x, y } = this.getCenterPoint();
+      const position = mapStore.getRandomWalkableGrid({ x, y });
+      if (position) {
+        const { x, y } = position;
+        this.startFindWay(x, y).then(() => {
+          fn();
+        });
+      }
+    };
+    fn();
+
+    // setTimeout(() => {
+    //   Ticker.shared.add(() => {
+    //     const distance = _getStartEndDistance(playerStore.x, this.x, playerStore.y, this.y);
+    //     if (distance < 100) {
+    //       this.isChasing = true;
+    //       this.killPathfindingMove();
+
+    //       const maxDistance = Math.max(
+    //         Math.abs(playerStore.x - this.x),
+    //         Math.abs(playerStore.y - this.y),
+    //       );
+
+    //       if (distance >= 25) {
+    //         this.x += ((playerStore.x - this.x) / maxDistance) * this.getMovePixel();
+    //         this.y += ((playerStore.y - this.y) / maxDistance) * this.getMovePixel();
+    //         const direction = _getVHDirection(this.x, this.y, playerStore.x, playerStore.y);
+    //         this.turnDirection(direction);
+    //       } else {
+    //         this.resetDirection();
+    //       }
+    //     } else {
+    //       if (this.isChasing) {
+    //         fn();
+    //         this.isChasing = false;
+    //       }
+    //     }
+    //   });
+    // }, 1000);
   }
 
   protected turnDirection(direction: Game.DirectionFour) {

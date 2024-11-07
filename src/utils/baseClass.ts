@@ -6,6 +6,7 @@ import { Container, Graphics, Ticker, type Resource, type Texture } from "pixi.j
 
 import type { _SpriteAnimate } from "./pixiTool";
 import { _getMapPosToGridCoord } from "./private";
+import { _getVHDirection } from "./tool";
 
 import { FindWayMapUI } from "@/screens/GameSreen/ui/FindWayMapUI";
 import { mapStore } from "@/store/map";
@@ -39,22 +40,10 @@ export abstract class AutoFindPath extends Container {
   }
 
   /** @description 开始寻路
-   * @param pageX 鼠标点击的屏幕坐标
-   * @param pageY 鼠标点击的屏幕坐标
+   * @param x 地图坐标X
+   * @param y 地图坐标Y
    */
-  async startFindWay(pageX: number, pageY: number, type: "map" | "screen" = "screen") {
-    //屏幕坐标转地图坐标
-    let x = 0;
-    let y = 0;
-
-    if (type === "map") {
-      x = pageX;
-      y = pageY;
-    } else {
-      x = Math.abs(mapStore.x) + pageX;
-      y = Math.abs(mapStore.y) + pageY;
-    }
-
+  async startFindWay(x: number, y: number) {
     const { x: centerX, y: centerY } = this.getCenterPoint();
     const moverGridCoord = _getMapPosToGridCoord(centerX, centerY);
     const targetGridCoord = _getMapPosToGridCoord(x, y);
@@ -72,27 +61,15 @@ export abstract class AutoFindPath extends Container {
     //计算从玩家到目标的路径
     this.path = FindWayMapUI.calculatePath(moverGridCoord, targetGridCoord);
     this.killPathfindingMove();
-    // this.drawPath(this.path, x, y);
+    this.drawPath(this.path, x, y);
     await this.startMove(x, y);
-  }
-
-  /** @description 中断自动寻路移动 */
-  protected killPathfindingMove() {
-    this.pathGraphics.clear();
-    this.pathfindingMove && Ticker.shared.remove(this.pathfindingMove);
-    this.pathfindingMove = undefined;
-  }
-
-  /** @description 获取玩家每1毫秒移动的像素 */
-  protected getMovePixel() {
-    return (this.speed / 10) * 2;
   }
 
   /** @description 玩家沿路径移动的逻辑
    * @param x 地图上点击的坐标
    * @param y 地图上点击的坐标
    */
-  startMove(x: number, y: number) {
+  protected startMove(x: number, y: number) {
     return new Promise<void>((resolve) => {
       //忽略第一个路径点，因为玩家坐标已经在第一个路径点处
       let pathIndex = 1;
@@ -119,7 +96,7 @@ export abstract class AutoFindPath extends Container {
           const distance = Math.sqrt(dx * dx + dy * dy);
 
           //到达路径点后，移动到下一个路径点
-          if (distance <= 2) {
+          if (distance <= 3) {
             pathIndex++;
           } else {
             const moveX = (dx / distance) * pixel;
@@ -128,9 +105,8 @@ export abstract class AutoFindPath extends Container {
             this.x += moveX;
             this.y += moveY;
 
-            // 计算玩家朝向
-            const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-            this.updatePlayerDirection(angle);
+            const direction = _getVHDirection(this.x, this.y, targetX, targetY);
+            this.turnDirection(direction);
           }
         } else {
           this.killPathfindingMove();
@@ -143,10 +119,22 @@ export abstract class AutoFindPath extends Container {
     });
   }
 
+  /** @description 中断自动寻路移动 */
+  protected killPathfindingMove() {
+    this.pathGraphics.clear();
+    this.pathfindingMove && Ticker.shared.remove(this.pathfindingMove);
+    this.pathfindingMove = undefined;
+  }
+
+  /** @description 获取玩家每1毫秒移动的像素 */
+  protected getMovePixel() {
+    return (this.speed / 10) * 2;
+  }
+
   /** @description 通过传入的角度计算玩家朝向
    * @param angle 角度
    */
-  private updatePlayerDirection(angle: number) {
+  protected updatePlayerDirection(angle: number) {
     let direction: Game.DirectionFour = "down";
 
     if (angle >= -45 && angle < 45) {
@@ -164,7 +152,7 @@ export abstract class AutoFindPath extends Container {
 
   /** @description 绘制路径 */
   private drawPath(path: number[][], targetX: number, targetY: number) {
-    this.parent.addChild(this.pathGraphics);
+    this.parent?.addChild(this.pathGraphics);
     this.pathGraphics.clear();
 
     if (path.length > 0) {

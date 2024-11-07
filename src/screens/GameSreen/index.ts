@@ -19,28 +19,60 @@ import { _getMapPosToGridCoord } from "@/utils/private";
 export class GameSreen extends LibContainerSize {
   /** 当前障碍物坐标组 */
   private obstacleCoord: number[][] = [
-    [0, 100],
-    [50, 100],
-    [100, 100],
-    [150, 100],
-    [200, 100],
-    [250, 100],
-    [300, 100],
-    [350, 100],
-    [400, 100],
-    [400, 150],
-    [400, 200],
-    [400, 250],
-    [400, 300],
-    [400, 350],
-    [350, 350],
-    [300, 350],
-    [250, 350],
-    [200, 350],
-    [200, 300],
-    [200, 250],
-    [200, 200],
-    [200, 150],
+    [930, 900],
+    [960, 900],
+    [990, 900],
+    [990, 930],
+    [990, 960],
+    [990, 990],
+    [960, 990],
+    [930, 990],
+    [930, 960],
+    [900, 900],
+    [870, 900],
+    [870, 930],
+    [870, 960],
+    [870, 990],
+    [870, 1020],
+    [870, 1050],
+    [900, 1050],
+    [930, 1050],
+    [960, 1050],
+    [990, 1050],
+    [1020, 1050],
+    [1050, 1050],
+    [1050, 1020],
+    [1050, 990],
+    [1050, 960],
+    [1050, 930],
+    [1050, 900],
+    [1050, 870],
+    [1050, 840],
+    [1020, 840],
+    [990, 840],
+    [930, 840],
+    [960, 840],
+    [900, 840],
+    [870, 840],
+    [840, 840],
+    [810, 840],
+    [810, 870],
+    [810, 900],
+    [810, 930],
+    [810, 960],
+    [810, 990],
+    [810, 1020],
+    [810, 1050],
+    [810, 1080],
+    [810, 1110],
+    [840, 1110],
+    [870, 1110],
+    [900, 1110],
+    [930, 1110],
+    [960, 1110],
+    [990, 1110],
+    [1020, 1110],
+    [1050, 1110],
   ];
   /** 地图 */
   private gameMap: MapUI;
@@ -126,9 +158,9 @@ export class GameSreen extends LibContainerSize {
       mapStore.setPosition(this.gameMap.x, this.gameMap.y);
     });
 
-    // this.obstacleCoord.forEach((coord) => {
-    //   this.createObstacle(coord[0], coord[1]);
-    // });
+    this.obstacleCoord.forEach((coord) => {
+      this.createObstacle(coord[0], coord[1]);
+    });
   }
 
   /** @description 设置玩家移动相关事件 */
@@ -153,7 +185,7 @@ export class GameSreen extends LibContainerSize {
 
       //鼠标右键寻路
       if (e.button === 2) {
-        this.player.startFindWay(pageX, pageY);
+        this.player.startFindWay(posX, posY);
         mapStore.setCoord(coordX, coordY);
       }
     });

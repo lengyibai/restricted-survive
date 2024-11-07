@@ -88,19 +88,24 @@ export const _getVHDirection = (
   currentY: number,
   targetX: number,
   targetY: number,
-): Game.DirectionFour => {
-  const deltaX = targetX - currentX;
-  const deltaY = targetY - currentY;
+) => {
+  const dx = targetX - currentX;
+  const dy = targetY - currentY;
+  const angle = Math.atan2(dy, dx) * (180 / Math.PI);
 
-  // 判断是否发生了左右移动
-  if (deltaX !== 0 || (deltaX !== 0 && deltaY !== 0)) {
-    return deltaX > 0 ? "right" : "left";
+  let direction: Game.DirectionFour = "down";
+
+  if (angle >= -45 && angle < 45) {
+    direction = "right";
+  } else if (angle >= 45 && angle < 135) {
+    direction = "down";
+  } else if (angle >= 135 || angle < -135) {
+    direction = "left";
+  } else {
+    direction = "up";
   }
 
-  // 判断是否发生了上下移动
-  else {
-    return deltaY > 0 ? "down" : "up";
-  }
+  return direction;
 };
 
 /** @description 随机数

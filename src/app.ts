@@ -2,12 +2,16 @@ import gsap from "gsap";
 import { Application, type Container } from "pixi.js";
 import _debounce from "lodash/debounce";
 
+import { PerfMon } from "./utils/PerfMon";
+
 export const app = new Application<HTMLCanvasElement>({
   resizeTo: window,
   antialias: false,
   resolution: window.devicePixelRatio || 1,
   autoDensity: true,
 });
+
+new PerfMon(app);
 
 app.view.addEventListener("contextmenu", (event) => {
   event.preventDefault();
